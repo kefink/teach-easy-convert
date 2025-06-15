@@ -34,9 +34,16 @@ const Index = () => {
     setTimeout(() => {
       const mockLessonPlans: LessonPlan[] = [
         {
-          id: '1',
-          weekNumber: 1,
+          id: 1,
+          school: config.school,
+          level: config.level,
+          learningArea: config.learningArea,
+          date: config.date.toISOString().split('T')[0],
+          time: '8:00 AM - 8:40 AM',
+          roll: config.roll,
+          week: 1,
           lessonNumber: 1,
+          title: 'Introduction to Technology',
           strand: 'BASIC TECHNOLOGY',
           subStrand: 'Technology around us',
           specificLearningOutcomes: [
@@ -45,37 +52,62 @@ const Index = () => {
             'Appreciate the role of technology in improving quality of life'
           ],
           keyInquiryQuestion: 'How does technology improve our daily lives?',
-          learningExperiences: [
-            'Brainstorming session on what technology means',
-            'Group discussion on technologies found at home',
-            'Field trip around school to identify technologies',
-            'Creating a technology map of their community'
-          ],
           learningResources: [
             'Pictures of various technologies',
             'Real objects (phones, computers, etc.)',
             'Chart paper and markers',
             'Digital projector'
           ],
-          assessment: {
-            formative: 'Oral questions during discussions, observation during group work',
-            summative: 'Technology identification worksheet, group presentation'
+          introduction: {
+            duration: '5 minutes',
+            activities: [
+              'Greet learners and take attendance',
+              'Review previous lesson briefly',
+              'Introduce today\'s topic'
+            ]
           },
-          reflection: 'Did learners successfully identify and categorize different technologies?',
-          // Configuration data
+          lessonDevelopment: {
+            duration: '30 minutes',
+            steps: [
+              {
+                stepNumber: 1,
+                activity: 'Brainstorming session on what technology means',
+                duration: '10 minutes'
+              },
+              {
+                stepNumber: 2,
+                activity: 'Group discussion on technologies found at home',
+                duration: '10 minutes'
+              },
+              {
+                stepNumber: 3,
+                activity: 'Creating a technology map of their community',
+                duration: '10 minutes'
+              }
+            ]
+          },
+          conclusion: {
+            duration: '5 minutes',
+            activities: [
+              'Summarize key points learned',
+              'Ask learners to share one technology they find most useful',
+              'Preview next lesson'
+            ]
+          },
+          assessment: 'Oral questions during discussions, observation during group work, technology identification worksheet',
+          reflection: 'Did learners successfully identify and categorize different technologies?'
+        },
+        {
+          id: 2,
           school: config.school,
           level: config.level,
           learningArea: config.learningArea,
-          date: config.date,
+          date: new Date(config.date.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+          time: '8:00 AM - 9:20 AM',
           roll: config.roll,
-          term: config.term,
-          lessonDuration: config.singleLessonDuration,
-          isDoubleLesion: false
-        },
-        {
-          id: '2',
-          weekNumber: 1,
+          week: 1,
           lessonNumber: 2,
+          title: 'Classification of Technologies',
           strand: 'BASIC TECHNOLOGY',
           subStrand: 'Technology around us',
           specificLearningOutcomes: [
@@ -84,32 +116,50 @@ const Index = () => {
             'Demonstrate safe use of simple technologies'
           ],
           keyInquiryQuestion: 'How can we classify and safely use different technologies?',
-          learningExperiences: [
-            'Technology classification activity',
-            'Hands-on exploration of safe technology use',
-            'Role-playing proper technology handling',
-            'Creating technology safety rules'
-          ],
           learningResources: [
             'Various technological devices',
             'Safety guidelines charts',
             'Classification worksheets',
             'Video clips on technology safety'
           ],
-          assessment: {
-            formative: 'Peer assessment during classification activity',
-            summative: 'Safety demonstration and technology classification test'
+          introduction: {
+            duration: '10 minutes',
+            activities: [
+              'Greet learners and take attendance',
+              'Quick recap of previous lesson on technology definition',
+              'Introduce classification concept'
+            ]
           },
-          reflection: 'Were learners able to classify technologies correctly and demonstrate safe usage?',
-          // Configuration data
-          school: config.school,
-          level: config.level,
-          learningArea: config.learningArea,
-          date: new Date(config.date.getTime() + (7 * 24 * 60 * 60 * 1000)), // Next week
-          roll: config.roll,
-          term: config.term,
-          lessonDuration: config.doubleLessonDuration,
-          isDoubleLesion: true
+          lessonDevelopment: {
+            duration: '60 minutes',
+            steps: [
+              {
+                stepNumber: 1,
+                activity: 'Technology classification activity in groups',
+                duration: '20 minutes'
+              },
+              {
+                stepNumber: 2,
+                activity: 'Hands-on exploration of safe technology use',
+                duration: '20 minutes'
+              },
+              {
+                stepNumber: 3,
+                activity: 'Role-playing proper technology handling',
+                duration: '20 minutes'
+              }
+            ]
+          },
+          conclusion: {
+            duration: '10 minutes',
+            activities: [
+              'Groups present their classification results',
+              'Discuss safety rules created',
+              'Assign homework on technology categories at home'
+            ]
+          },
+          assessment: 'Peer assessment during classification activity, safety demonstration and technology classification test',
+          reflection: 'Were learners able to classify technologies correctly and demonstrate safe usage?'
         }
       ];
 
@@ -211,7 +261,7 @@ const Index = () => {
             </Card>
 
             {/* Sample Data Section */}
-            <SampleData onUseData={handleUpload} />
+            <SampleData />
           </>
         )}
 
@@ -226,9 +276,8 @@ const Index = () => {
         {/* Results */}
         {lessonPlans.length > 0 && (
           <ConversionResults 
-            lessonPlans={lessonPlans} 
+            lessons={lessonPlans} 
             isLoading={isLoading}
-            configuration={configuration}
           />
         )}
       </main>

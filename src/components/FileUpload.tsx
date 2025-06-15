@@ -1,9 +1,8 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, Paste } from 'lucide-react';
+import { Upload, FileText, ClipboardPaste } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
@@ -111,7 +110,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload }) => {
       {/* Text Input Alternative */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Paste className="h-4 w-4" />
+          <ClipboardPaste className="h-4 w-4" />
           <span>Or paste your scheme of work content directly:</span>
         </div>
         <Textarea

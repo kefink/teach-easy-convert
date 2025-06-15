@@ -31,7 +31,7 @@ interface LessonPlanConfigProps {
 
 const learningAreas = [
   'English',
-  'Kiswahili',
+  'Kiswahili', 
   'Mathematics',
   'Integrated Science',
   'Health Education',
@@ -184,7 +184,6 @@ export const LessonPlanConfig: React.FC<LessonPlanConfigProps> = ({
                     setDatePickerOpen(false);
                   }}
                   initialFocus
-                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>

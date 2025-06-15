@@ -54,29 +54,38 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-40 left-1/2 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="relative backdrop-blur-md bg-white/30 border-b border-white/20 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-600 p-2 rounded-lg">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-xl shadow-lg backdrop-blur-sm">
               <BookOpen className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">STEM-ED ARCHITECTS</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                STEM-ED ARCHITECTS
+              </h1>
               <p className="text-blue-600 font-medium">engineering learning solutions</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Intelligent Scheme to <span className="text-blue-600">Lesson Conversion</span>
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
+            Intelligent Scheme to <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Lesson Conversion</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
             Transform your schemes of work into comprehensive, structured lesson plans 
             with our intelligent educational technology solutions.
           </p>
@@ -84,31 +93,37 @@ const Index = () => {
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <FileText className="h-12 w-12 text-blue-600 mx-auto mb-2" />
-              <CardTitle>Smart Upload</CardTitle>
-              <CardDescription>
+          <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/50">
+            <CardHeader className="text-center">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl w-fit mx-auto mb-4 shadow-lg">
+                <FileText className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Smart Upload</CardTitle>
+              <CardDescription className="text-gray-600">
                 Upload schemes of work in multiple formats with intelligent content parsing
               </CardDescription>
             </CardHeader>
           </Card>
           
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <Zap className="h-12 w-12 text-green-600 mx-auto mb-2" />
-              <CardTitle>AI-Powered Conversion</CardTitle>
-              <CardDescription>
+          <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/50">
+            <CardHeader className="text-center">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-xl w-fit mx-auto mb-4 shadow-lg">
+                <Zap className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">AI-Powered Conversion</CardTitle>
+              <CardDescription className="text-gray-600">
                 Advanced algorithms transform schemes into pedagogically sound lesson structures
               </CardDescription>
             </CardHeader>
           </Card>
           
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <Download className="h-12 w-12 text-purple-600 mx-auto mb-2" />
-              <CardTitle>Professional Output</CardTitle>
-              <CardDescription>
+          <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-white/50">
+            <CardHeader className="text-center">
+              <div className="bg-gradient-to-r from-purple-500 to-violet-600 p-3 rounded-xl w-fit mx-auto mb-4 shadow-lg">
+                <Download className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Professional Output</CardTitle>
+              <CardDescription className="text-gray-600">
                 Generate classroom-ready lesson plans with comprehensive teaching resources
               </CardDescription>
             </CardHeader>
@@ -117,21 +132,31 @@ const Index = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="convert" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-            <TabsTrigger value="convert">Convert Schemes</TabsTrigger>
-            <TabsTrigger value="samples">View Samples</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto backdrop-blur-md bg-white/30 border border-white/30 shadow-lg">
+            <TabsTrigger 
+              value="convert" 
+              className="data-[state=active]:bg-white/80 data-[state=active]:shadow-md transition-all duration-200"
+            >
+              Convert Schemes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="samples"
+              className="data-[state=active]:bg-white/80 data-[state=active]:shadow-md transition-all duration-200"
+            >
+              View Samples
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="convert" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Upload Section */}
-              <Card>
+              <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5" />
+                  <CardTitle className="flex items-center space-x-2 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                    <FileText className="h-5 w-5 text-blue-600" />
                     <span>Upload Scheme of Work</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-600">
                     Upload your scheme of work document or paste the content directly
                   </CardDescription>
                 </CardHeader>
@@ -145,12 +170,12 @@ const Index = () => {
                         <Button 
                           onClick={handleConvert}
                           disabled={isConverting}
-                          className="bg-blue-600 hover:bg-blue-700"
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg backdrop-blur-sm border border-blue-300/30"
                         >
                           {isConverting ? "Converting..." : "Convert to Lessons"}
                         </Button>
                       </div>
-                      <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                      <div className="backdrop-blur-sm bg-white/60 p-4 rounded-lg max-h-40 overflow-y-auto border border-white/30 shadow-inner">
                         <p className="text-sm text-gray-700">
                           {uploadedScheme.substring(0, 300)}...
                         </p>
@@ -161,13 +186,13 @@ const Index = () => {
               </Card>
 
               {/* Results Section */}
-              <Card>
+              <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BookOpen className="h-5 w-5" />
+                  <CardTitle className="flex items-center space-x-2 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                    <BookOpen className="h-5 w-5 text-green-600" />
                     <span>Generated Lesson Plans</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-600">
                     Your converted lesson plans will appear here
                   </CardDescription>
                 </CardHeader>
@@ -182,7 +207,9 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="samples">
-            <SampleData />
+            <div className="backdrop-blur-md bg-white/30 border border-white/30 shadow-xl rounded-lg p-6">
+              <SampleData />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

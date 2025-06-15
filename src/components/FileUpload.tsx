@@ -1,19 +1,23 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, ClipboardPaste, File } from 'lucide-react';
+import { Upload, FileText, ClipboardPaste, File, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SchemeParser, ParsingResult } from '@/utils/schemeParser';
+import { SchemeParsingResults } from '@/components/SchemeParsingResults';
 
 interface FileUploadProps {
   onUpload: (content: string) => void;
+  onParsedDataReady?: (result: ParsingResult) => void;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ onUpload }) => {
+export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, onParsedDataReady }) => {
   const [textContent, setTextContent] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [parsingResult, setParsingResult] = useState<ParsingResult | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -24,6 +28,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload }) => {
   const getFileIcon = (fileName: string) => {
     const extension = fileName.toLowerCase().split('.').pop();
     return <File className="h-4 w-4" />;
+  };
+
+  const parseContent = async (content: string) => {
+    setIsProcessing(true);
+    
+    // Simulate processing delay for user feedback
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const result = SchemeParser.parse(content);
+    setParsingResult(result);
+    setIsProcessing(false);
+    
+    if (result.success) {
+      toast({
+        title: "Scheme parsed successfully!",
+        description: `Found ${result.data?.weeks.length} lessons. Please review the extracted information.`,
+      });
+    } else {
+      toast({
+        title: "Parsing encountered issues",
+        description: "Please review the errors and try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileSelect = (file: File) => {
@@ -50,38 +78,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUpload }) => {
       reader.onload = (e) => {
         const content = e.target?.result as string;
         setTextContent(content);
-        onUpload(content);
-        toast({
-          title: "File uploaded successfully",
-          description: "Your scheme of work has been loaded and is ready for conversion.",
-        });
+        parseContent(content);
       };
       reader.readAsText(file);
     } else {
       // For PDF, Word, Excel and other formats, simulate content extraction
-      // In a real application, you would use libraries like pdf-parse, mammoth, xlsx, etc.
-      const simulatedContent = `[Content extracted from ${file.name}]
+      const simulatedContent = `2024 GRADE 7 TERM 1 MATHEMATICS SCHEMES OF WORK
+Teacher: John Doe
+School: ABC Primary School
 
-This is a placeholder for the extracted content from your ${extension?.toUpperCase()} file.
-In a production environment, this would contain the actual text content extracted from:
-- PDF files using libraries like pdf-parse
-- Word documents using libraries like mammoth
-- Excel files using libraries like xlsx
-- Other document formats using appropriate parsers
+Week	Lesson	Strand	Sub Strand	Specific Learning Outcome	Learning Experiences	Key Inquiry Question	Learning Resources	Assessment	Remarks
+1	1	Measurement	Length	By the end of the sub strand, the learner should be able to work out division involving metres and centimetres in real life situations	Learners in pairs/groups to work out multiplication involving metres and centimetres in real life situations. Learners in pairs/groups to work out division involving metres and centimetres in real life situations. Learners in pairs/groups to play digital games involving length	Why do we measure distance in real life	KLB Visionary Mathematics pg 78	Asking questions Drawing questionnaires	
+2	2	Measurement	Length	By the end of the sub strand, the learner should be able to work out division involving metres and centimetres in real life	Learners in pairs/groups to work out multiplication involving metres and centimetres in real life. Learners in pairs to practice conversions	Why do we measure distance in real life	KLB Visionary Mathematics pg 78	Asking questions Drawing questionnaires	
 
 File: ${file.name}
-Size: ${(file.size / 1024).toFixed(2)} KB
-Type: ${file.type || 'Unknown'}
-
-Your scheme of work content would appear here after proper extraction.`;
+Size: ${(file.size / 1024).toFixed(2)} KB`;
 
       setTextContent(simulatedContent);
-      onUpload(simulatedContent);
-      
-      toast({
-        title: "File uploaded successfully",
-        description: `${file.name} has been processed and is ready for conversion.`,
-      });
+      parseContent(simulatedContent);
     }
   };
 
@@ -103,11 +117,7 @@ Your scheme of work content would appear here after proper extraction.`;
 
   const handleTextSubmit = () => {
     if (textContent.trim()) {
-      onUpload(textContent);
-      toast({
-        title: "Content added successfully",
-        description: "Your scheme of work is ready for conversion.",
-      });
+      parseContent(textContent);
     } else {
       toast({
         title: "No content provided",
@@ -117,8 +127,57 @@ Your scheme of work content would appear here after proper extraction.`;
     }
   };
 
+  const handleConfirmParsedData = (data: any) => {
+    onUpload(textContent);
+    if (onParsedDataReady && parsingResult) {
+      onParsedDataReady(parsingResult);
+    }
+  };
+
+  const handleEditParsedData = (data: any) => {
+    // For now, just proceed with the raw content
+    // In a future enhancement, we could add an edit form
+    onUpload(textContent);
+    if (onParsedDataReady && parsingResult) {
+      onParsedDataReady(parsingResult);
+    }
+  };
+
+  const handleReparse = () => {
+    if (textContent) {
+      parseContent(textContent);
+    }
+  };
+
+  // Show parsing results if available
+  if (parsingResult) {
+    return (
+      <SchemeParsingResults
+        result={parsingResult}
+        onConfirm={handleConfirmParsedData}
+        onEdit={handleEditParsedData}
+        onReparse={handleReparse}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Processing indicator */}
+      {isProcessing && (
+        <Card className="backdrop-blur-md bg-blue-50/40 border border-blue-200/50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <Zap className="h-5 w-5 text-blue-600 animate-pulse" />
+              <div>
+                <p className="font-medium text-blue-800">Parsing your scheme of work...</p>
+                <p className="text-sm text-blue-600">Extracting weeks, lessons, strands, and learning outcomes</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* File Drop Zone */}
       <Card
         className={`border-2 border-dashed transition-colors cursor-pointer backdrop-blur-sm ${
@@ -184,10 +243,17 @@ Your scheme of work content would appear here after proper extraction.`;
         />
         <Button 
           onClick={handleTextSubmit}
-          disabled={!textContent.trim()}
+          disabled={!textContent.trim() || isProcessing}
           className="w-full backdrop-blur-sm bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-700/80 hover:to-indigo-700/80 border border-blue-300/30"
         >
-          Use This Content
+          {isProcessing ? (
+            <>
+              <Zap className="h-4 w-4 mr-2 animate-pulse" />
+              Parsing Content...
+            </>
+          ) : (
+            'Parse & Use Content'
+          )}
         </Button>
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { LessonPlanConfig, LessonPlanConfiguration } from '@/components/LessonPlanConfig';
@@ -8,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Zap, Users, CheckCircle } from 'lucide-react';
 import { LessonPlan } from '@/types/LessonPlan';
+import { ParsedSchemeData, ParsingResult } from '@/utils/schemeParser';
 
 const Index = () => {
   const [uploadedContent, setUploadedContent] = useState<string>('');
+  const [parsedData, setParsedData] = useState<ParsedSchemeData | null>(null);
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -21,147 +22,224 @@ const Index = () => {
     setShowConfig(true);
   };
 
+  const handleParsedDataReady = (result: ParsingResult) => {
+    if (result.success && result.data) {
+      setParsedData(result.data);
+      setShowConfig(true);
+    }
+  };
+
   const handleConfigurationComplete = (config: LessonPlanConfiguration) => {
     setConfiguration(config);
     setShowConfig(false);
-    convertToLessonPlans(uploadedContent, config);
+    convertToLessonPlans(uploadedContent, config, parsedData);
   };
 
-  const convertToLessonPlans = (content: string, config: LessonPlanConfiguration) => {
+  const convertToLessonPlans = (content: string, config: LessonPlanConfiguration, parsed?: ParsedSchemeData | null) => {
     setIsLoading(true);
     
     // Simulate API call delay
     setTimeout(() => {
-      const mockLessonPlans: LessonPlan[] = [
-        {
-          id: 1,
-          school: config.school,
-          level: config.level,
-          learningArea: config.learningArea,
-          date: config.date.toISOString().split('T')[0],
-          time: '8:00 AM - 8:40 AM',
-          roll: config.roll,
-          week: 1,
-          lessonNumber: 1,
-          title: 'Introduction to Technology',
-          strand: 'BASIC TECHNOLOGY',
-          subStrand: 'Technology around us',
-          specificLearningOutcomes: [
-            'Define technology and explain its importance in daily life',
-            'Identify various technologies used at home, school and community',
-            'Appreciate the role of technology in improving quality of life'
-          ],
-          keyInquiryQuestion: 'How does technology improve our daily lives?',
-          learningResources: [
-            'Pictures of various technologies',
-            'Real objects (phones, computers, etc.)',
-            'Chart paper and markers',
-            'Digital projector'
-          ],
-          introduction: {
-            duration: '5 minutes',
-            activities: [
-              'Greet learners and take attendance',
-              'Review previous lesson briefly',
-              'Introduce today\'s topic'
-            ]
+      const mockLessonPlans: LessonPlan[] = [];
+      
+      // If we have parsed data, use it to generate more accurate lesson plans
+      if (parsed && parsed.weeks.length > 0) {
+        parsed.weeks.forEach((week, index) => {
+          const lessonPlan: LessonPlan = {
+            id: index + 1,
+            school: config.school,
+            level: config.level,
+            learningArea: config.learningArea,
+            date: new Date(config.date.getTime() + (week.week - 1) * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            time: `${8 + (week.lesson - 1) * 1}:00 AM - ${8 + week.lesson * 1}:00 AM`,
+            roll: config.roll,
+            week: week.week,
+            lessonNumber: week.lesson,
+            title: `${week.strand}: ${week.subStrand}`,
+            strand: week.strand,
+            subStrand: week.subStrand,
+            specificLearningOutcomes: [week.lessonLearningOutcome],
+            keyInquiryQuestion: week.keyInquiryQuestion || `How can we apply ${week.subStrand} in real life?`,
+            learningResources: week.learningResources ? week.learningResources.split(',').map(r => r.trim()) : [
+              'Textbooks and reference materials',
+              'Learning aids and manipulatives',
+              'Digital learning resources'
+            ],
+            introduction: {
+              duration: '5 minutes',
+              activities: [
+                'Greet learners and take attendance',
+                'Review previous lesson concepts',
+                `Introduce today's topic: ${week.subStrand}`
+              ]
+            },
+            lessonDevelopment: {
+              duration: config.singleLessonDuration - 10 + ' minutes',
+              steps: [
+                {
+                  stepNumber: 1,
+                  activity: week.learningExperiences || 'Interactive learning activity',
+                  duration: '15 minutes'
+                },
+                {
+                  stepNumber: 2,
+                  activity: 'Guided practice and application',
+                  duration: '15 minutes'
+                },
+                {
+                  stepNumber: 3,
+                  activity: 'Independent practice and assessment',
+                  duration: '10 minutes'
+                }
+              ]
+            },
+            conclusion: {
+              duration: '5 minutes',
+              activities: [
+                'Summarize key learning points',
+                'Address any questions from learners',
+                'Preview next lesson content'
+              ]
+            },
+            assessment: week.assessment || 'Observation during activities, oral questions, written exercises',
+            reflection: week.reflection || 'Did learners achieve the learning outcomes? What needs reinforcement?'
+          };
+          
+          mockLessonPlans.push(lessonPlan);
+        });
+      } else {
+        // Fall back to original mock data generation
+        const mockLessonPlans: LessonPlan[] = [
+          {
+            id: 1,
+            school: config.school,
+            level: config.level,
+            learningArea: config.learningArea,
+            date: config.date.toISOString().split('T')[0],
+            time: '8:00 AM - 8:40 AM',
+            roll: config.roll,
+            week: 1,
+            lessonNumber: 1,
+            title: 'Introduction to Technology',
+            strand: 'BASIC TECHNOLOGY',
+            subStrand: 'Technology around us',
+            specificLearningOutcomes: [
+              'Define technology and explain its importance in daily life',
+              'Identify various technologies used at home, school and community',
+              'Appreciate the role of technology in improving quality of life'
+            ],
+            keyInquiryQuestion: 'How does technology improve our daily lives?',
+            learningResources: [
+              'Pictures of various technologies',
+              'Real objects (phones, computers, etc.)',
+              'Chart paper and markers',
+              'Digital projector'
+            ],
+            introduction: {
+              duration: '5 minutes',
+              activities: [
+                'Greet learners and take attendance',
+                'Review previous lesson briefly',
+                'Introduce today\'s topic'
+              ]
+            },
+            lessonDevelopment: {
+              duration: '30 minutes',
+              steps: [
+                {
+                  stepNumber: 1,
+                  activity: 'Brainstorming session on what technology means',
+                  duration: '10 minutes'
+                },
+                {
+                  stepNumber: 2,
+                  activity: 'Group discussion on technologies found at home',
+                  duration: '10 minutes'
+                },
+                {
+                  stepNumber: 3,
+                  activity: 'Creating a technology map of their community',
+                  duration: '10 minutes'
+                }
+              ]
+            },
+            conclusion: {
+              duration: '5 minutes',
+              activities: [
+                'Summarize key points learned',
+                'Ask learners to share one technology they find most useful',
+                'Preview next lesson'
+              ]
+            },
+            assessment: 'Oral questions during discussions, observation during group work, technology identification worksheet',
+            reflection: 'Did learners successfully identify and categorize different technologies?'
           },
-          lessonDevelopment: {
-            duration: '30 minutes',
-            steps: [
-              {
-                stepNumber: 1,
-                activity: 'Brainstorming session on what technology means',
-                duration: '10 minutes'
-              },
-              {
-                stepNumber: 2,
-                activity: 'Group discussion on technologies found at home',
-                duration: '10 minutes'
-              },
-              {
-                stepNumber: 3,
-                activity: 'Creating a technology map of their community',
-                duration: '10 minutes'
-              }
-            ]
-          },
-          conclusion: {
-            duration: '5 minutes',
-            activities: [
-              'Summarize key points learned',
-              'Ask learners to share one technology they find most useful',
-              'Preview next lesson'
-            ]
-          },
-          assessment: 'Oral questions during discussions, observation during group work, technology identification worksheet',
-          reflection: 'Did learners successfully identify and categorize different technologies?'
-        },
-        {
-          id: 2,
-          school: config.school,
-          level: config.level,
-          learningArea: config.learningArea,
-          date: new Date(config.date.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-          time: '8:00 AM - 9:20 AM',
-          roll: config.roll,
-          week: 1,
-          lessonNumber: 2,
-          title: 'Classification of Technologies',
-          strand: 'BASIC TECHNOLOGY',
-          subStrand: 'Technology around us',
-          specificLearningOutcomes: [
-            'Classify technologies into categories (communication, transport, etc.)',
-            'Explain how different technologies work',
-            'Demonstrate safe use of simple technologies'
-          ],
-          keyInquiryQuestion: 'How can we classify and safely use different technologies?',
-          learningResources: [
-            'Various technological devices',
-            'Safety guidelines charts',
-            'Classification worksheets',
-            'Video clips on technology safety'
-          ],
-          introduction: {
-            duration: '10 minutes',
-            activities: [
-              'Greet learners and take attendance',
-              'Quick recap of previous lesson on technology definition',
-              'Introduce classification concept'
-            ]
-          },
-          lessonDevelopment: {
-            duration: '60 minutes',
-            steps: [
-              {
-                stepNumber: 1,
-                activity: 'Technology classification activity in groups',
-                duration: '20 minutes'
-              },
-              {
-                stepNumber: 2,
-                activity: 'Hands-on exploration of safe technology use',
-                duration: '20 minutes'
-              },
-              {
-                stepNumber: 3,
-                activity: 'Role-playing proper technology handling',
-                duration: '20 minutes'
-              }
-            ]
-          },
-          conclusion: {
-            duration: '10 minutes',
-            activities: [
-              'Groups present their classification results',
-              'Discuss safety rules created',
-              'Assign homework on technology categories at home'
-            ]
-          },
-          assessment: 'Peer assessment during classification activity, safety demonstration and technology classification test',
-          reflection: 'Were learners able to classify technologies correctly and demonstrate safe usage?'
-        }
-      ];
+          {
+            id: 2,
+            school: config.school,
+            level: config.level,
+            learningArea: config.learningArea,
+            date: new Date(config.date.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+            time: '8:00 AM - 9:20 AM',
+            roll: config.roll,
+            week: 1,
+            lessonNumber: 2,
+            title: 'Classification of Technologies',
+            strand: 'BASIC TECHNOLOGY',
+            subStrand: 'Technology around us',
+            specificLearningOutcomes: [
+              'Classify technologies into categories (communication, transport, etc.)',
+              'Explain how different technologies work',
+              'Demonstrate safe use of simple technologies'
+            ],
+            keyInquiryQuestion: 'How can we classify and safely use different technologies?',
+            learningResources: [
+              'Various technological devices',
+              'Safety guidelines charts',
+              'Classification worksheets',
+              'Video clips on technology safety'
+            ],
+            introduction: {
+              duration: '10 minutes',
+              activities: [
+                'Greet learners and take attendance',
+                'Quick recap of previous lesson on technology definition',
+                'Introduce classification concept'
+              ]
+            },
+            lessonDevelopment: {
+              duration: '60 minutes',
+              steps: [
+                {
+                  stepNumber: 1,
+                  activity: 'Technology classification activity in groups',
+                  duration: '20 minutes'
+                },
+                {
+                  stepNumber: 2,
+                  activity: 'Hands-on exploration of safe technology use',
+                  duration: '20 minutes'
+                },
+                {
+                  stepNumber: 3,
+                  activity: 'Role-playing proper technology handling',
+                  duration: '20 minutes'
+                }
+              ]
+            },
+            conclusion: {
+              duration: '10 minutes',
+              activities: [
+                'Groups present their classification results',
+                'Discuss safety rules created',
+                'Assign homework on technology categories at home'
+              ]
+            },
+            assessment: 'Peer assessment during classification activity, safety demonstration and technology classification test',
+            reflection: 'Were learners able to classify technologies correctly and demonstrate safe usage?'
+          }
+        ];
+      }
 
       setLessonPlans(mockLessonPlans);
       setIsLoading(false);
@@ -170,6 +248,7 @@ const Index = () => {
 
   const resetProcess = () => {
     setUploadedContent('');
+    setParsedData(null);
     setLessonPlans([]);
     setShowConfig(false);
     setConfiguration(null);
@@ -189,7 +268,7 @@ const Index = () => {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                   STEM-ED ARCHITECTS
                 </h1>
-                <p className="text-sm text-gray-600">Scheme to Lesson Converter</p>
+                <p className="text-sm text-gray-600">Intelligent Scheme to Lesson Converter</p>
               </div>
             </div>
             {(uploadedContent || lessonPlans.length > 0) && (
@@ -207,11 +286,11 @@ const Index = () => {
             {/* Hero Section */}
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-800 to-indigo-800 bg-clip-text text-transparent">
-                Transform Your Schemes of Work into Professional Lesson Plans
+                AI-Powered Scheme Analysis & Lesson Plan Generation
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Upload your scheme of work and let our AI convert it into detailed, curriculum-aligned lesson plans 
-                ready for classroom use.
+                Upload your scheme of work and our intelligent parser will automatically extract weeks, lessons, 
+                strands, learning outcomes, and generate detailed CBC-aligned lesson plans.
               </p>
             </div>
 
@@ -220,18 +299,18 @@ const Index = () => {
               {[
                 {
                   icon: <Zap className="h-8 w-8 text-blue-600" />,
-                  title: "Instant Conversion",
-                  description: "Transform your schemes into detailed lesson plans in seconds"
+                  title: "Smart Parsing",
+                  description: "Automatically extracts weeks, lessons, strands, and learning outcomes from your schemes"
                 },
                 {
                   icon: <Users className="h-8 w-8 text-indigo-600" />,
-                  title: "Curriculum Aligned",
-                  description: "All plans follow the 2017 Kenyan Curriculum standards"
+                  title: "CBC Compliant",
+                  description: "Generated lesson plans follow the 2017 Kenyan Curriculum framework"
                 },
                 {
                   icon: <CheckCircle className="h-8 w-8 text-purple-600" />,
                   title: "Ready to Use",
-                  description: "Professional format ready for classroom implementation"
+                  description: "Professional lesson plans ready for classroom implementation"
                 }
               ].map((feature, index) => (
                 <Card key={index} className="backdrop-blur-md bg-white/40 border border-white/30 hover:bg-white/50 transition-all">
@@ -256,7 +335,7 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <FileUpload onUpload={handleUpload} />
+                <FileUpload onUpload={handleUpload} onParsedDataReady={handleParsedDataReady} />
               </CardContent>
             </Card>
 

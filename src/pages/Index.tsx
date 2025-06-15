@@ -24,26 +24,145 @@ const Index = () => {
     setIsConverting(true);
     console.log("Starting conversion process...");
     
-    // Simulate AI conversion process
+    // Simulate AI conversion process with realistic Kenyan curriculum data
     setTimeout(() => {
       const mockLessons = [
         {
           id: 1,
-          title: "Introduction to Topic",
-          duration: "60 minutes",
-          objectives: ["Understand basic concepts", "Identify key principles"],
-          activities: ["Warm-up discussion", "Main teaching", "Group work", "Plenary"],
-          resources: ["Textbook", "Whiteboard", "Worksheets"],
-          assessment: "Formative questioning throughout"
+          school: "",
+          level: "Grade 9",
+          learningArea: "English",
+          week: 1,
+          lessonNumber: 1,
+          title: "Narrative Writing: Elements of a Story",
+          strand: "Writing",
+          subStrand: "Creative Writing",
+          specificLearningOutcomes: [
+            "Identify the basic elements of a narrative story",
+            "Demonstrate understanding of plot, character, and setting",
+            "Write a short narrative paragraph using story elements"
+          ],
+          keyInquiryQuestion: "What makes a story interesting and engaging to read?",
+          learningResources: [
+            "Sample short stories",
+            "Story element charts",
+            "Writing exercise worksheets",
+            "Blackboard/whiteboard"
+          ],
+          introduction: {
+            duration: "5 minutes",
+            activities: [
+              "Greet learners and take attendance",
+              "Brief review of previous lesson on reading comprehension",
+              "Introduce today's topic: Elements of a Story"
+            ]
+          },
+          lessonDevelopment: {
+            duration: "30 minutes",
+            steps: [
+              {
+                stepNumber: 1,
+                activity: "Explain the five basic elements of a story: plot, character, setting, theme, and point of view",
+                duration: "8 minutes"
+              },
+              {
+                stepNumber: 2,
+                activity: "Read a short story together and identify each element as a class",
+                duration: "10 minutes"
+              },
+              {
+                stepNumber: 3,
+                activity: "Divide class into groups to analyze different short stories",
+                duration: "7 minutes"
+              },
+              {
+                stepNumber: 4,
+                activity: "Groups present their findings to the class",
+                duration: "5 minutes"
+              }
+            ]
+          },
+          conclusion: {
+            duration: "5 minutes",
+            activities: [
+              "Summarize the five story elements",
+              "Assign homework: Write a one-paragraph story using all five elements",
+              "Preview next lesson: Character development techniques"
+            ]
+          },
+          extendedActivities: [
+            "Create a story map for a favorite book",
+            "Interview family members about their favorite stories"
+          ],
+          assessment: "Formative assessment through group participation and story element identification exercise",
+          teacherSelfEvaluation: "",
+          reflection: ""
         },
         {
           id: 2,
-          title: "Practical Application",
-          duration: "60 minutes",
-          objectives: ["Apply learned concepts", "Demonstrate understanding"],
-          activities: ["Recap previous lesson", "Practical tasks", "Peer assessment"],
-          resources: ["Practical materials", "Assessment rubric"],
-          assessment: "Practical demonstration"
+          school: "",
+          level: "Grade 9",
+          learningArea: "English",
+          week: 1,
+          lessonNumber: 2,
+          title: "Character Development in Narratives",
+          strand: "Writing",
+          subStrand: "Creative Writing",
+          specificLearningOutcomes: [
+            "Describe different types of characters in stories",
+            "Create well-developed characters with distinct traits",
+            "Use character descriptions to enhance narrative writing"
+          ],
+          keyInquiryQuestion: "How do authors make characters come alive in their stories?",
+          learningResources: [
+            "Character trait vocabulary lists",
+            "Sample character descriptions",
+            "Creative writing templates",
+            "Flip chart paper and markers"
+          ],
+          introduction: {
+            duration: "5 minutes",
+            activities: [
+              "Welcome learners and review homework from previous lesson",
+              "Ask learners to describe their favorite fictional character",
+              "Introduce the concept of character development"
+            ]
+          },
+          lessonDevelopment: {
+            duration: "30 minutes",
+            steps: [
+              {
+                stepNumber: 1,
+                activity: "Discuss the difference between flat and round characters",
+                duration: "10 minutes"
+              },
+              {
+                stepNumber: 2,
+                activity: "Examine character traits: physical, emotional, and behavioral",
+                duration: "8 minutes"
+              },
+              {
+                stepNumber: 3,
+                activity: "Practice activity: Create a character profile using guided template",
+                duration: "12 minutes"
+              }
+            ]
+          },
+          conclusion: {
+            duration: "5 minutes",
+            activities: [
+              "Share selected character profiles with the class",
+              "Discuss how good characters make stories more interesting",
+              "Assign practice exercise for next lesson"
+            ]
+          },
+          extendedActivities: [
+            "Draw and describe an original character",
+            "Find examples of character development in a novel"
+          ],
+          assessment: "Peer assessment of character profiles and class participation",
+          teacherSelfEvaluation: "",
+          reflection: ""
         }
       ];
       

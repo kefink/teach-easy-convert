@@ -4,18 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Download, Clock, Target, Activity, FileText, CheckCircle } from 'lucide-react';
+import { Download, Clock, Target, Activity, FileText, CheckCircle, BookOpen, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface LessonPlan {
-  id: number;
-  title: string;
-  duration: string;
-  objectives: string[];
-  activities: string[];
-  resources: string[];
-  assessment: string;
-}
+import { LessonPlan } from '@/types/LessonPlan';
 
 interface ConversionResultsProps {
   lessons: LessonPlan[];
@@ -26,29 +17,62 @@ export const ConversionResults: React.FC<ConversionResultsProps> = ({ lessons, i
   const { toast } = useToast();
 
   const handleDownload = (lesson: LessonPlan) => {
-    // Create a formatted lesson plan document
     const content = `
-LESSON PLAN: ${lesson.title}
-Duration: ${lesson.duration}
+LESSON PLAN
 
-LEARNING OBJECTIVES:
-${lesson.objectives.map(obj => `• ${obj}`).join('\n')}
+SCHOOL: ${lesson.school || '_________________'}
+LEVEL: ${lesson.level}
+LEARNING AREA: ${lesson.learningArea}
+DATE: ${lesson.date || '_________________'}
+TIME: ${lesson.time || '_________________'}
+ROLL: ${lesson.roll || '_________________'}
 
-ACTIVITIES:
-${lesson.activities.map((activity, index) => `${index + 1}. ${activity}`).join('\n')}
+LESSON: ${lesson.week ? `2025 Rationalized Week ${lesson.week}:` : ''} Lesson ${lesson.lessonNumber}
+TITLE: ${lesson.title}
 
-RESOURCES NEEDED:
-${lesson.resources.map(resource => `• ${resource}`).join('\n')}
+STRAND: ${lesson.strand}
+SUB-STRAND: ${lesson.subStrand}
+
+SPECIFIC LEARNING OUTCOMES:
+${lesson.specificLearningOutcomes.map(outcome => `• ${outcome}`).join('\n')}
+
+KEY INQUIRY QUESTION:
+${lesson.keyInquiryQuestion}
+
+LEARNING RESOURCES:
+${lesson.learningResources.map(resource => `• ${resource}`).join('\n')}
+
+ORGANIZATION OF LEARNING:
+
+INTRODUCTION (${lesson.introduction.duration}):
+${lesson.introduction.activities.map(activity => `• ${activity}`).join('\n')}
+
+LESSON DEVELOPMENT (${lesson.lessonDevelopment.duration}):
+${lesson.lessonDevelopment.steps.map(step => 
+  `Step ${step.stepNumber}: ${step.activity}${step.duration ? ` (${step.duration})` : ''}`
+).join('\n')}
+
+CONCLUSION (${lesson.conclusion.duration}):
+${lesson.conclusion.activities.map(activity => `• ${activity}`).join('\n')}
+
+${lesson.extendedActivities ? `EXTENDED ACTIVITIES:
+${lesson.extendedActivities.map(activity => `• ${activity}`).join('\n')}` : ''}
 
 ASSESSMENT:
 ${lesson.assessment}
+
+TEACHER SELF-EVALUATION:
+${lesson.teacherSelfEvaluation || '_________________'}
+
+REFLECTION:
+${lesson.reflection || '_________________'}
     `.trim();
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${lesson.title.replace(/\s+/g, '_')}_Lesson_Plan.txt`;
+    a.download = `Week_${lesson.week}_Lesson_${lesson.lessonNumber}_${lesson.title.replace(/\s+/g, '_')}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -72,7 +96,7 @@ ${lesson.assessment}
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Converting your scheme of work...</p>
-          <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
+          <p className="text-sm text-gray-500 mt-2">Generating structured lesson plans</p>
         </div>
       </div>
     );
@@ -107,71 +131,103 @@ ${lesson.assessment}
       {/* Lesson Plans */}
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {lessons.map((lesson) => (
-          <Card key={lesson.id} className="hover:shadow-md transition-shadow">
+          <Card key={lesson.id} className="hover:shadow-md transition-shadow backdrop-blur-sm bg-white/60 border border-white/30">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-gray-900">{lesson.title}</CardTitle>
+                <CardTitle className="text-lg text-gray-900">
+                  Week {lesson.week}: {lesson.title}
+                </CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleDownload(lesson)}
+                  className="backdrop-blur-sm bg-white/50"
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Download
                 </Button>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4" />
-                <span>{lesson.duration}</span>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <BookOpen className="h-4 w-4" />
+                  <span>{lesson.learningArea}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Users className="h-4 w-4" />
+                  <span>{lesson.level}</span>
+                </div>
               </div>
             </CardHeader>
             
             <CardContent className="space-y-4">
-              {/* Learning Objectives */}
+              {/* Strand and Sub-strand */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <span className="font-medium text-blue-600 text-sm">Strand:</span>
+                  <p className="text-gray-700 text-sm">{lesson.strand}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-600 text-sm">Sub-strand:</span>
+                  <p className="text-gray-700 text-sm">{lesson.subStrand}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Learning Outcomes */}
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <Target className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-sm">Learning Objectives</span>
+                  <Target className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-sm">Specific Learning Outcomes</span>
                 </div>
                 <div className="space-y-1">
-                  {lesson.objectives.map((objective, index) => (
-                    <Badge key={index} variant="secondary" className="mr-2 mb-1">
-                      {objective}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Activities */}
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <Activity className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-sm">Activities</span>
-                </div>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  {lesson.activities.map((activity, index) => (
-                    <li key={index} className="flex items-start space-x-2">
+                  {lesson.specificLearningOutcomes.slice(0, 2).map((outcome, index) => (
+                    <p key={index} className="text-sm text-gray-700 flex items-start space-x-2">
                       <span className="text-gray-400 mt-0.5">•</span>
-                      <span>{activity}</span>
-                    </li>
+                      <span>{outcome}</span>
+                    </p>
                   ))}
-                </ul>
+                  {lesson.specificLearningOutcomes.length > 2 && (
+                    <p className="text-xs text-gray-500">
+                      +{lesson.specificLearningOutcomes.length - 2} more outcomes
+                    </p>
+                  )}
+                </div>
               </div>
 
               <Separator />
 
-              {/* Resources & Assessment */}
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-900">Resources:</span>
-                  <p className="text-gray-700 mt-1">{lesson.resources.join(', ')}</p>
+              {/* Key Inquiry Question */}
+              <div>
+                <span className="font-medium text-purple-600 text-sm">Key Inquiry Question:</span>
+                <p className="text-gray-700 text-sm mt-1 italic">{lesson.keyInquiryQuestion}</p>
+              </div>
+
+              <Separator />
+
+              {/* Learning Organization Summary */}
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="text-center p-2 bg-blue-50 rounded">
+                  <Clock className="h-3 w-3 mx-auto mb-1 text-blue-600" />
+                  <p className="font-medium">Introduction</p>
+                  <p className="text-gray-600">{lesson.introduction.duration}</p>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-900">Assessment:</span>
-                  <p className="text-gray-700 mt-1">{lesson.assessment}</p>
+                <div className="text-center p-2 bg-green-50 rounded">
+                  <Activity className="h-3 w-3 mx-auto mb-1 text-green-600" />
+                  <p className="font-medium">Development</p>
+                  <p className="text-gray-600">{lesson.lessonDevelopment.duration}</p>
                 </div>
+                <div className="text-center p-2 bg-orange-50 rounded">
+                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-orange-600" />
+                  <p className="font-medium">Conclusion</p>
+                  <p className="text-gray-600">{lesson.conclusion.duration}</p>
+                </div>
+              </div>
+
+              {/* Assessment */}
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <span className="font-medium text-gray-900 text-sm">Assessment:</span>
+                <p className="text-gray-700 text-sm mt-1">{lesson.assessment}</p>
               </div>
             </CardContent>
           </Card>

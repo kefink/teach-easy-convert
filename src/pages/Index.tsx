@@ -1,176 +1,155 @@
-
 import React, { useState } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { ConversionResults } from '@/components/ConversionResults';
+import { LessonPlanConfig, LessonPlanConfiguration } from '@/components/LessonPlanConfig';
 import { SampleData } from '@/components/SampleData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, FileText, Zap, Download } from 'lucide-react';
+import { BookOpen, FileText, Zap, Download, Settings, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
 const Index = () => {
   const [uploadedScheme, setUploadedScheme] = useState<string | null>(null);
+  const [lessonConfig, setLessonConfig] = useState<LessonPlanConfiguration | null>(null);
   const [generatedLessons, setGeneratedLessons] = useState<any[]>([]);
   const [isConverting, setIsConverting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'upload' | 'config' | 'convert'>('upload');
 
   const handleSchemeUpload = (content: string) => {
     setUploadedScheme(content);
+    setCurrentStep('config');
     console.log("Scheme uploaded:", content.substring(0, 100) + "...");
   };
 
+  const handleConfigurationComplete = (config: LessonPlanConfiguration) => {
+    setLessonConfig(config);
+    setCurrentStep('convert');
+    console.log("Configuration completed:", config);
+  };
+
   const handleConvert = async () => {
-    if (!uploadedScheme) return;
+    if (!uploadedScheme || !lessonConfig) return;
     
     setIsConverting(true);
-    console.log("Starting conversion process...");
+    console.log("Starting conversion process with config:", lessonConfig);
     
-    // Simulate AI conversion process with realistic Kenyan curriculum data
+    // Enhanced mock lesson generation based on configuration
     setTimeout(() => {
-      const mockLessons = [
-        {
-          id: 1,
-          school: "",
-          level: "Grade 9",
-          learningArea: "English",
-          week: 1,
-          lessonNumber: 1,
-          title: "Narrative Writing: Elements of a Story",
-          strand: "Writing",
-          subStrand: "Creative Writing",
-          specificLearningOutcomes: [
-            "Identify the basic elements of a narrative story",
-            "Demonstrate understanding of plot, character, and setting",
-            "Write a short narrative paragraph using story elements"
-          ],
-          keyInquiryQuestion: "What makes a story interesting and engaging to read?",
-          learningResources: [
-            "Sample short stories",
-            "Story element charts",
-            "Writing exercise worksheets",
-            "Blackboard/whiteboard"
-          ],
-          introduction: {
-            duration: "5 minutes",
-            activities: [
-              "Greet learners and take attendance",
-              "Brief review of previous lesson on reading comprehension",
-              "Introduce today's topic: Elements of a Story"
-            ]
-          },
-          lessonDevelopment: {
-            duration: "30 minutes",
-            steps: [
-              {
-                stepNumber: 1,
-                activity: "Explain the five basic elements of a story: plot, character, setting, theme, and point of view",
-                duration: "8 minutes"
-              },
-              {
-                stepNumber: 2,
-                activity: "Read a short story together and identify each element as a class",
-                duration: "10 minutes"
-              },
-              {
-                stepNumber: 3,
-                activity: "Divide class into groups to analyze different short stories",
-                duration: "7 minutes"
-              },
-              {
-                stepNumber: 4,
-                activity: "Groups present their findings to the class",
-                duration: "5 minutes"
-              }
-            ]
-          },
-          conclusion: {
-            duration: "5 minutes",
-            activities: [
-              "Summarize the five story elements",
-              "Assign homework: Write a one-paragraph story using all five elements",
-              "Preview next lesson: Character development techniques"
-            ]
-          },
-          extendedActivities: [
-            "Create a story map for a favorite book",
-            "Interview family members about their favorite stories"
-          ],
-          assessment: "Formative assessment through group participation and story element identification exercise",
-          teacherSelfEvaluation: "",
-          reflection: ""
-        },
-        {
-          id: 2,
-          school: "",
-          level: "Grade 9",
-          learningArea: "English",
-          week: 1,
-          lessonNumber: 2,
-          title: "Character Development in Narratives",
-          strand: "Writing",
-          subStrand: "Creative Writing",
-          specificLearningOutcomes: [
-            "Describe different types of characters in stories",
-            "Create well-developed characters with distinct traits",
-            "Use character descriptions to enhance narrative writing"
-          ],
-          keyInquiryQuestion: "How do authors make characters come alive in their stories?",
-          learningResources: [
-            "Character trait vocabulary lists",
-            "Sample character descriptions",
-            "Creative writing templates",
-            "Flip chart paper and markers"
-          ],
-          introduction: {
-            duration: "5 minutes",
-            activities: [
-              "Welcome learners and review homework from previous lesson",
-              "Ask learners to describe their favorite fictional character",
-              "Introduce the concept of character development"
-            ]
-          },
-          lessonDevelopment: {
-            duration: "30 minutes",
-            steps: [
-              {
-                stepNumber: 1,
-                activity: "Discuss the difference between flat and round characters",
-                duration: "10 minutes"
-              },
-              {
-                stepNumber: 2,
-                activity: "Examine character traits: physical, emotional, and behavioral",
-                duration: "8 minutes"
-              },
-              {
-                stepNumber: 3,
-                activity: "Practice activity: Create a character profile using guided template",
-                duration: "12 minutes"
-              }
-            ]
-          },
-          conclusion: {
-            duration: "5 minutes",
-            activities: [
-              "Share selected character profiles with the class",
-              "Discuss how good characters make stories more interesting",
-              "Assign practice exercise for next lesson"
-            ]
-          },
-          extendedActivities: [
-            "Draw and describe an original character",
-            "Find examples of character development in a novel"
-          ],
-          assessment: "Peer assessment of character profiles and class participation",
-          teacherSelfEvaluation: "",
-          reflection: ""
+      const mockLessons = [];
+      const totalLessons = lessonConfig.lessonsPerWeek * 13; // Assuming 13 weeks per term
+      
+      // Generate lessons based on configuration
+      for (let week = 1; week <= 13; week++) {
+        for (let lessonNum = 1; lessonNum <= lessonConfig.lessonsPerWeek; lessonNum++) {
+          const isDoubleLession = lessonConfig.hasDoubleLessons && lessonNum === lessonConfig.lessonsPerWeek;
+          const lessonDuration = isDoubleLession ? lessonConfig.doubleLessonDuration : lessonConfig.singleLessonDuration;
+          
+          mockLessons.push({
+            id: (week - 1) * lessonConfig.lessonsPerWeek + lessonNum,
+            school: lessonConfig.school,
+            level: lessonConfig.level,
+            learningArea: lessonConfig.learningArea,
+            date: format(lessonConfig.date, 'dd/MM/yyyy'),
+            time: isDoubleLession ? '40 min' : `${lessonConfig.singleLessonDuration} min`,
+            roll: lessonConfig.roll,
+            term: lessonConfig.term,
+            week: week,
+            lessonNumber: lessonNum,
+            title: `${lessonConfig.learningArea} Lesson ${lessonNum} - Week ${week}`,
+            strand: getStrandForLearningArea(lessonConfig.learningArea),
+            subStrand: getSubStrandForLearningArea(lessonConfig.learningArea, week),
+            specificLearningOutcomes: [
+              `By the end of the lesson, the learner should be able to demonstrate understanding of ${lessonConfig.learningArea} concepts`,
+              `Apply knowledge gained in practical situations`,
+              `Collaborate effectively with peers in learning activities`
+            ],
+            keyInquiryQuestion: `How can we effectively apply ${lessonConfig.learningArea} concepts in our daily lives?`,
+            learningResources: [
+              "Course textbook",
+              "Blackboard/whiteboard", 
+              "Learning materials",
+              "Reference books"
+            ],
+            introduction: {
+              duration: "5 minutes",
+              activities: [
+                "Greet learners and take attendance",
+                "Review previous lesson",
+                "Introduce today's topic"
+              ]
+            },
+            lessonDevelopment: {
+              duration: `${Math.floor(lessonDuration * 0.75)} minutes`,
+              steps: [
+                {
+                  stepNumber: 1,
+                  activity: "Introduce key concepts and terminology",
+                  duration: `${Math.floor(lessonDuration * 0.25)} minutes`
+                },
+                {
+                  stepNumber: 2,
+                  activity: "Demonstrate practical applications",
+                  duration: `${Math.floor(lessonDuration * 0.25)} minutes`
+                },
+                {
+                  stepNumber: 3,
+                  activity: "Guided practice activities",
+                  duration: `${Math.floor(lessonDuration * 0.25)} minutes`
+                }
+              ]
+            },
+            conclusion: {
+              duration: "5 minutes",
+              activities: [
+                "Summarize key learning points",
+                "Assign homework or practice activities",
+                "Preview next lesson"
+              ]
+            },
+            extendedActivities: [
+              "Research related topics at home",
+              "Practice skills with family members"
+            ],
+            assessment: "Formative assessment through observation and questioning",
+            teacherSelfEvaluation: "",
+            reflection: ""
+          });
+          
+          // Limit to first few lessons for demo
+          if (mockLessons.length >= 6) break;
         }
-      ];
+        if (mockLessons.length >= 6) break;
+      }
       
       setGeneratedLessons(mockLessons);
       setIsConverting(false);
       console.log("Conversion completed:", mockLessons);
     }, 3000);
   };
+
+  const getStrandForLearningArea = (area: string): string => {
+    const strands: { [key: string]: string } = {
+      'English': 'Writing',
+      'Mathematics': 'Numbers',
+      'Pre-Technical Studies': 'Design and Technology',
+      'Integrated Science': 'Biology',
+      'Social Studies': 'History and Government'
+    };
+    return strands[area] || 'General Studies';
+  };
+
+  const getSubStrandForLearningArea = (area: string, week: number): string => {
+    const subStrands: { [key: string]: string[] } = {
+      'English': ['Creative Writing', 'Narrative Writing', 'Poetry', 'Grammar'],
+      'Mathematics': ['Whole Numbers', 'Fractions', 'Decimals', 'Algebra'],
+      'Pre-Technical Studies': ['Materials', 'Tools and Equipment', 'Safety', 'Design Process']
+    };
+    const areaSubStrands = subStrands[area] || ['General Concepts'];
+    return areaSubStrands[(week - 1) % areaSubStrands.length];
+  };
+
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
@@ -209,6 +188,32 @@ const Index = () => {
             with our intelligent educational technology solutions.
           </p>
         </div>
+
+        {/* Progress Steps */}
+        {(currentStep !== 'upload' || uploadedScheme) && (
+          <div className="flex items-center justify-center mb-8 space-x-4">
+            <div className={`flex items-center space-x-2 ${uploadedScheme ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`rounded-full p-2 ${uploadedScheme ? 'bg-green-100' : 'bg-gray-100'}`}>
+                <FileText className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium">Upload Scheme</span>
+            </div>
+            <div className={`w-12 h-0.5 ${lessonConfig ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className={`flex items-center space-x-2 ${lessonConfig ? 'text-green-600' : currentStep === 'config' ? 'text-blue-600' : 'text-gray-400'}`}>
+              <div className={`rounded-full p-2 ${lessonConfig ? 'bg-green-100' : currentStep === 'config' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <Settings className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium">Configure</span>
+            </div>
+            <div className={`w-12 h-0.5 ${generatedLessons.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className={`flex items-center space-x-2 ${generatedLessons.length > 0 ? 'text-green-600' : currentStep === 'convert' ? 'text-blue-600' : 'text-gray-400'}`}>
+              <div className={`rounded-full p-2 ${generatedLessons.length > 0 ? 'bg-green-100' : currentStep === 'convert' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <CheckCircle className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium">Generate</span>
+            </div>
+          </div>
+        )}
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -267,6 +272,12 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="convert" className="space-y-6">
+            {/* Configuration Form */}
+            <LessonPlanConfig 
+              onConfigurationComplete={handleConfigurationComplete}
+              isVisible={currentStep === 'config'}
+            />
+
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Upload Section */}
               <Card className="backdrop-blur-md bg-white/40 border border-white/30 shadow-xl">
@@ -286,13 +297,15 @@ const Index = () => {
                     <div className="mt-6">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium text-gray-900">Uploaded Content Preview</h4>
-                        <Button 
-                          onClick={handleConvert}
-                          disabled={isConverting}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg backdrop-blur-sm border border-blue-300/30"
-                        >
-                          {isConverting ? "Converting..." : "Convert to Lessons"}
-                        </Button>
+                        {currentStep === 'convert' && (
+                          <Button 
+                            onClick={handleConvert}
+                            disabled={isConverting}
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg backdrop-blur-sm border border-blue-300/30"
+                          >
+                            {isConverting ? "Converting..." : "Convert to Lessons"}
+                          </Button>
+                        )}
                       </div>
                       <div className="backdrop-blur-sm bg-white/60 p-4 rounded-lg max-h-40 overflow-y-auto border border-white/30 shadow-inner">
                         <p className="text-sm text-gray-700">

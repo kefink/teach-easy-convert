@@ -63,8 +63,8 @@ const Index = () => {
               <BookOpen className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">EduPlan Converter</h1>
-              <p className="text-gray-600">Transform schemes of work into detailed lesson plans</p>
+              <h1 className="text-2xl font-bold text-gray-900">STEM-ED ARCHITECTS</h1>
+              <p className="text-blue-600 font-medium">engineering learning solutions</p>
             </div>
           </div>
         </div>
@@ -74,11 +74,11 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Make Lesson Planning <span className="text-blue-600">Effortless</span>
+            Intelligent Scheme to <span className="text-blue-600">Lesson Conversion</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Upload your scheme of work and let our AI convert it into comprehensive, 
-            ready-to-use lesson plans that follow educational best practices.
+            Transform your schemes of work into comprehensive, structured lesson plans 
+            with our intelligent educational technology solutions.
           </p>
         </div>
 
@@ -87,9 +87,9 @@ const Index = () => {
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <FileText className="h-12 w-12 text-blue-600 mx-auto mb-2" />
-              <CardTitle>Upload Schemes</CardTitle>
+              <CardTitle>Smart Upload</CardTitle>
               <CardDescription>
-                Simply upload your existing schemes of work in any text format
+                Upload schemes of work in multiple formats with intelligent content parsing
               </CardDescription>
             </CardHeader>
           </Card>
@@ -97,9 +97,9 @@ const Index = () => {
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Zap className="h-12 w-12 text-green-600 mx-auto mb-2" />
-              <CardTitle>AI Conversion</CardTitle>
+              <CardTitle>AI-Powered Conversion</CardTitle>
               <CardDescription>
-                Our intelligent system breaks down schemes into structured lesson plans
+                Advanced algorithms transform schemes into pedagogically sound lesson structures
               </CardDescription>
             </CardHeader>
           </Card>
@@ -107,9 +107,9 @@ const Index = () => {
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Download className="h-12 w-12 text-purple-600 mx-auto mb-2" />
-              <CardTitle>Download Plans</CardTitle>
+              <CardTitle>Professional Output</CardTitle>
               <CardDescription>
-                Get professionally formatted lesson plans ready for classroom use
+                Generate classroom-ready lesson plans with comprehensive teaching resources
               </CardDescription>
             </CardHeader>
           </Card>

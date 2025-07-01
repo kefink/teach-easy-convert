@@ -1,0 +1,66 @@
+MKT@LAMPEIN MINGW64 ~/desktop/converter (main)
+$ npm run dev:all
+
+> next-lesson-plan-generator@0.1.0 dev:all
+> concurrently "npm run dev" "cd backend && .\venv\Scripts\activate && uvicorn main:app --reload"
+
+[1] INFO:     Will watch for changes in these directories: ['C:\\Users\\MKT\\Desktop\\converter\\backend']
+[1] INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+[1] INFO:     Started reloader process [14312] using WatchFiles
+[0]
+[0] > next-lesson-plan-generator@0.1.0 dev
+[0] > next dev
+[0]
+[1] Process SpawnProcess-1:
+[1] Traceback (most recent call last):
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\process.py", line 314, in _bootstrap
+[1]     self.run()
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\multiprocessing\process.py", line 108, in run
+[1]     self._target(*self._args, **self._kwargs)
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\_subprocess.py", line 80, in subprocess_started
+[1]     target(sockets=sockets)
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\server.py", line 66, in run
+[1]     return asyncio.run(self.serve(sockets=sockets))
+[1]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+[1]     return runner.run(main)
+[1]            ^^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+[1]     return self._loop.run_until_complete(task)
+[1]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 654, in run_until_complete
+[1]     return future.result()
+[1]            ^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\server.py", line 70, in serve
+[1]     await self._serve(sockets)
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\server.py", line 77, in _serve
+[1]     config.load()
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\config.py", line 435, in load
+[1]     self.loaded_app = import_from_string(self.app)
+[1]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\Desktop\converter\backend\venv\Lib\site-packages\uvicorn\importer.py", line 19, in import_from_string
+[1]     module = importlib.import_module(module_str)
+[1]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[1]   File "C:\Users\MKT\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", line 126, in import_module
+[1]     return _bootstrap._gcd_import(name[level:], package, level)
+[1]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[1]   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+[1]   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+[1]   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+[1]   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+[1]   File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+[1]   File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+[1]   File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+[1]   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[1]   File "C:\Users\MKT\Desktop\converter\backend\main.py", line 186
+[1]     r'^\s*(\d+)\s*
+[1]     ^
+[1] SyntaxError: unterminated string literal (detected at line 186)
+[0]  ⚠ Port 3000 is in use, trying 3001 instead.
+[0]  ⚠ Port 3001 is in use, trying 3002 instead.
+[0]  ⚠ Port 3002 is in use, trying 3003 instead.
+[0]   ▲ Next.js 14.2.5
+[0]   - Local:        http://localhost:3003
+[0]
+[0]  ✓ Starting...
+[0]  ✓ Ready in 5.2s

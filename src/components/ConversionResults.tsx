@@ -1,4 +1,6 @@
 
+"use client";
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -121,12 +123,12 @@ ${lesson.reflection || '_________________'}
       {/* Header with download all button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <span className="font-medium text-gray-900">
+          <CheckCircle className="h-5 w-5 text-accent-gold" />
+          <span className="font-medium text-text-white">
             {lessons.length} CBC-compliant lesson plan{lessons.length > 1 ? 's' : ''} generated
           </span>
         </div>
-        <Button onClick={handleDownloadAll} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleDownloadAll} className="bg-accent-gold hover:bg-accent-gold/90 text-primary-dark">
           <Download className="h-4 w-4 mr-2" />
           Download All
         </Button>
@@ -135,17 +137,17 @@ ${lesson.reflection || '_________________'}
       {/* Lesson Plans */}
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {lessons.map((lesson) => (
-          <Card key={lesson.id} className="hover:shadow-md transition-shadow backdrop-blur-sm bg-white/60 border border-white/30">
+          <Card key={lesson.id} className="hover:shadow-md transition-shadow backdrop-blur-sm bg-secondary-dark/60 border border-secondary-dark/30">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-gray-900">
+                <CardTitle className="text-lg text-text-white">
                   Week {lesson.week}: {lesson.title}
                 </CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleDownload(lesson)}
-                  className="backdrop-blur-sm bg-white/50"
+                  className="backdrop-blur-sm bg-secondary-dark/50 text-text-white border-secondary-dark"
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Download
@@ -153,7 +155,7 @@ ${lesson.reflection || '_________________'}
               </div>
               
               {/* Administrative Details */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600 bg-gray-50/50 p-2 rounded">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-text-gray bg-secondary-dark/50 p-2 rounded">
                 <div className="flex items-center space-x-1">
                   <BookOpen className="h-3 w-3" />
                   <span>{lesson.learningArea}</span>
@@ -179,12 +181,12 @@ ${lesson.reflection || '_________________'}
               {/* Strand and Sub-strand */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <span className="font-medium text-blue-600 text-sm">Strand:</span>
-                  <p className="text-gray-700 text-sm">{lesson.strand}</p>
+                  <span className="font-medium text-accent-gold text-sm">Strand:</span>
+                  <p className="text-text-gray text-sm">{lesson.strand}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-600 text-sm">Sub-strand:</span>
-                  <p className="text-gray-700 text-sm">{lesson.subStrand}</p>
+                  <span className="font-medium text-accent-gold text-sm">Sub-strand:</span>
+                  <p className="text-text-gray text-sm">{lesson.subStrand}</p>
                 </div>
               </div>
 
@@ -193,18 +195,18 @@ ${lesson.reflection || '_________________'}
               {/* Learning Outcomes */}
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <Target className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-sm">Specific Learning Outcomes</span>
+                  <Target className="h-4 w-4 text-accent-gold" />
+                  <span className="font-medium text-sm text-text-white">Specific Learning Outcomes</span>
                 </div>
                 <div className="space-y-1">
                   {lesson.specificLearningOutcomes.slice(0, 2).map((outcome, index) => (
-                    <p key={index} className="text-sm text-gray-700 flex items-start space-x-2">
-                      <span className="text-gray-400 mt-0.5">•</span>
+                    <p key={index} className="text-sm text-text-gray flex items-start space-x-2">
+                      <span className="text-text-gray mt-0.5">•</span>
                       <span>{outcome}</span>
                     </p>
                   ))}
                   {lesson.specificLearningOutcomes.length > 2 && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-text-gray">
                       +{lesson.specificLearningOutcomes.length - 2} more outcomes
                     </p>
                   )}
@@ -216,17 +218,17 @@ ${lesson.reflection || '_________________'}
               {/* Core Competencies */}
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <Award className="h-4 w-4 text-orange-600" />
-                  <span className="font-medium text-sm">Core Competencies</span>
+                  <Award className="h-4 w-4 text-accent-gold" />
+                  <span className="font-medium text-sm text-text-white">Core Competencies</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {lesson.coreCompetencies.slice(0, 3).map((competency, index) => (
-                    <Badge key={index} variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                    <Badge key={index} variant="outline" className="text-xs bg-secondary-dark text-text-white border-secondary-dark">
                       {competency}
                     </Badge>
                   ))}
                   {lesson.coreCompetencies.length > 3 && (
-                    <Badge variant="outline" className="text-xs bg-gray-50 text-gray-500">
+                    <Badge variant="outline" className="text-xs bg-secondary-dark text-text-gray">
                       +{lesson.coreCompetencies.length - 3} more
                     </Badge>
                   )}
@@ -237,46 +239,46 @@ ${lesson.reflection || '_________________'}
 
               {/* Key Inquiry Question */}
               <div>
-                <span className="font-medium text-purple-600 text-sm">Key Inquiry Question:</span>
-                <p className="text-gray-700 text-sm mt-1 italic">{lesson.keyInquiryQuestion}</p>
+                <span className="font-medium text-accent-gold text-sm">Key Inquiry Question:</span>
+                <p className="text-text-gray text-sm mt-1 italic">{lesson.keyInquiryQuestion}</p>
               </div>
 
               <Separator />
 
               {/* Learning Organization Summary */}
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center p-2 bg-blue-50 rounded">
-                  <Clock className="h-3 w-3 mx-auto mb-1 text-blue-600" />
-                  <p className="font-medium">Introduction</p>
-                  <p className="text-gray-600">{lesson.introduction.duration}</p>
+                <div className="text-center p-2 bg-secondary-dark rounded">
+                  <Clock className="h-3 w-3 mx-auto mb-1 text-accent-gold" />
+                  <p className="font-medium text-text-white">Introduction</p>
+                  <p className="text-text-gray">{lesson.introduction.duration}</p>
                 </div>
-                <div className="text-center p-2 bg-green-50 rounded">
-                  <Activity className="h-3 w-3 mx-auto mb-1 text-green-600" />
-                  <p className="font-medium">Development</p>
-                  <p className="text-gray-600">{lesson.lessonDevelopment.duration}</p>
+                <div className="text-center p-2 bg-secondary-dark rounded">
+                  <Activity className="h-3 w-3 mx-auto mb-1 text-accent-gold" />
+                  <p className="font-medium text-text-white">Development</p>
+                  <p className="text-text-gray">{lesson.lessonDevelopment.duration}</p>
                 </div>
-                <div className="text-center p-2 bg-orange-50 rounded">
-                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-orange-600" />
-                  <p className="font-medium">Conclusion</p>
-                  <p className="text-gray-600">{lesson.conclusion.duration}</p>
+                <div className="text-center p-2 bg-secondary-dark rounded">
+                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-accent-gold" />
+                  <p className="font-medium text-text-white">Conclusion</p>
+                  <p className="text-text-gray">{lesson.conclusion.duration}</p>
                 </div>
               </div>
 
               {/* Extended Activities */}
-              <div className="bg-purple-50 p-3 rounded-lg">
+              <div className="bg-secondary-dark p-3 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Lightbulb className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-purple-900 text-sm">Extended Activities:</span>
+                  <Lightbulb className="h-4 w-4 text-accent-gold" />
+                  <span className="font-medium text-text-white text-sm">Extended Activities:</span>
                 </div>
                 <div className="space-y-1">
                   {lesson.extendedActivities.slice(0, 2).map((activity, index) => (
-                    <p key={index} className="text-sm text-purple-800 flex items-start space-x-2">
-                      <span className="text-purple-400 mt-0.5">•</span>
+                    <p key={index} className="text-sm text-text-white flex items-start space-x-2">
+                      <span className="text-text-gray mt-0.5">•</span>
                       <span>{activity}</span>
                     </p>
                   ))}
                   {lesson.extendedActivities.length > 2 && (
-                    <p className="text-xs text-purple-600">
+                    <p className="text-xs text-text-gray">
                       +{lesson.extendedActivities.length - 2} more activities
                     </p>
                   )}
@@ -284,9 +286,9 @@ ${lesson.reflection || '_________________'}
               </div>
 
               {/* Assessment */}
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <span className="font-medium text-gray-900 text-sm">Assessment:</span>
-                <p className="text-gray-700 text-sm mt-1">{lesson.assessment}</p>
+              <div className="bg-secondary-dark p-3 rounded-lg">
+                <span className="font-medium text-text-white text-sm">Assessment:</span>
+                <p className="text-text-gray text-sm mt-1">{lesson.assessment}</p>
               </div>
             </CardContent>
           </Card>

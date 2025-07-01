@@ -1,102 +1,297 @@
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, ClipboardPaste, File, Zap } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { SchemeParser, ParsingResult } from '@/utils/schemeParser';
-import { SchemeParsingResults } from '@/components/SchemeParsingResults';
+"use client";
+
+import React, { useState, useRef } from "react";
+import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Upload, FileText, ClipboardPaste, Zap } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { SchemeParsingResults } from "@/components/SchemeParsingResults";
+import { ParsingResult } from "@/utils/schemeParser";
+
+// API Configuration
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
+// Dynamically import File icon to disable SSR
+const FileIcon = dynamic(() => import("lucide-react").then((mod) => mod.File), {
+  ssr: false,
+});
 
 interface FileUploadProps {
   onUpload: (content: string) => void;
   onParsedDataReady?: (result: ParsingResult) => void;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ onUpload, onParsedDataReady }) => {
-  const [textContent, setTextContent] = useState('');
+export const FileUpload: React.FC<FileUploadProps> = ({
+  onUpload,
+  onParsedDataReady,
+}) => {
+  const [textContent, setTextContent] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const [parsingResult, setParsingResult] = useState<ParsingResult | null>(null);
+  const [parsingResult, setParsingResult] = useState<ParsingResult | null>(
+    null
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const acceptedFormats = [
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.rtf', '.odt', '.ods'
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".txt",
+    ".rtf",
+    ".odt",
+    ".ods",
   ];
 
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.toLowerCase().split('.').pop();
-    return <File className="h-4 w-4" />;
+  const getFileIcon = (fileName: string | null) => {
+    return <FileIcon className="h-4 w-4" />;
   };
 
-  const parseContent = async (content: string) => {
+  const parseFile = async (file: File) => {
     setIsProcessing(true);
-    
-    // Simulate processing delay for user feedback
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const result = SchemeParser.parse(content);
-    setParsingResult(result);
-    setIsProcessing(false);
-    
-    if (result.success) {
-      toast({
-        title: "Scheme parsed successfully!",
-        description: `Found ${result.data?.weeks.length} lessons. Please review the extracted information.`,
+    setParsingResult(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      console.log(`Making request to: ${API_BASE_URL}/parse-scheme/`);
+
+      const response = await fetch(`${API_BASE_URL}/parse-scheme/`, {
+        method: "POST",
+        body: formData,
       });
-    } else {
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+
+        // Try to parse as JSON, fallback to text
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || "Failed to parse file on backend.";
+        } catch {
+          errorMessage = `Server error: ${response.status} - ${errorText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log("Parsed data:", data);
+
+      const result: ParsingResult = {
+        success: data.success,
+        data: data.success
+          ? {
+              title: "Parsed Scheme of Work",
+              weeks: data.lesson_plans.map((lp: any) => ({
+                week: lp.week,
+                lesson: lp.lessonNumber || 1,
+                strand: lp.strand,
+                subStrand: lp.sub_strand,
+                lessonLearningOutcome: lp.specific_learning_outcomes.join("\n"),
+                learningExperiences: lp.activities.join("\n"),
+                keyInquiryQuestion: lp.key_inquiry_question,
+                learningResources: lp.learning_resources.join("\n"),
+                assessment: lp.assessment,
+                reflection: lp.reflection,
+              })),
+              term: data.lesson_plans[0]?.term?.toString() || undefined,
+            }
+          : null,
+        errors: data.success ? [] : [data.message],
+        warnings: [],
+      };
+
+      setParsingResult(result);
+      if (onParsedDataReady) {
+        onParsedDataReady(result);
+      }
+
+      if (result.success) {
+        toast({
+          title: "Scheme parsed successfully!",
+          description: `Found ${result.data?.weeks.length} lessons. Please review the extracted information.`,
+        });
+      } else {
+        toast({
+          title: "Parsing encountered issues",
+          description:
+            result.errors[0] || "Please review the errors and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("File upload and parsing error:", error);
+
+      let errorMessage = "An unexpected error occurred during file processing.";
+
+      if (error.message.includes("fetch")) {
+        errorMessage = `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running.`;
+      } else {
+        errorMessage = error.message;
+      }
+
       toast({
-        title: "Parsing encountered issues",
-        description: "Please review the errors and try again.",
+        title: "Error processing file",
+        description: errorMessage,
         variant: "destructive",
       });
+
+      setParsingResult({
+        success: false,
+        data: null,
+        errors: [errorMessage],
+        warnings: [],
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTextSubmit = async () => {
+    if (!textContent.trim()) {
+      toast({
+        title: "No content provided",
+        description: "Please enter some content or upload a file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    setParsingResult(null);
+
+    try {
+      console.log(`Making request to: ${API_BASE_URL}/parse-text/`);
+
+      const response = await fetch(`${API_BASE_URL}/parse-text/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text_content: textContent }),
+      });
+
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.detail || "Failed to parse text on backend.";
+        } catch {
+          errorMessage = `Server error: ${response.status} - ${errorText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log("Parsed data:", data);
+
+      const result: ParsingResult = {
+        success: data.success,
+        data: data.success
+          ? {
+              title: "Parsed Scheme of Work (Text Input)",
+              weeks: data.lesson_plans.map((lp: any) => ({
+                week: lp.week,
+                lesson: lp.lessonNumber || 1,
+                strand: lp.strand,
+                subStrand: lp.sub_strand,
+                lessonLearningOutcome: lp.specific_learning_outcomes.join("\n"),
+                learningExperiences: lp.activities.join("\n"),
+                keyInquiryQuestion: lp.key_inquiry_question,
+                learningResources: lp.learning_resources.join("\n"),
+                assessment: lp.assessment,
+                reflection: lp.reflection,
+              })),
+              term: data.lesson_plans[0]?.term?.toString() || undefined,
+            }
+          : null,
+        errors: data.success ? [] : [data.message],
+        warnings: [],
+      };
+
+      setParsingResult(result);
+      if (onParsedDataReady) {
+        onParsedDataReady(result);
+      }
+
+      if (result.success) {
+        toast({
+          title: "Scheme parsed successfully!",
+          description: `Found ${result.data?.weeks.length} lessons from text.`,
+        });
+      } else {
+        toast({
+          title: "Parsing encountered issues",
+          description:
+            result.errors[0] || "Please review the errors and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Text parsing error:", error);
+
+      let errorMessage = "An unexpected error occurred during text processing.";
+
+      if (error.message.includes("fetch")) {
+        errorMessage = `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running.`;
+      } else {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Error processing text",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      setParsingResult({
+        success: false,
+        data: null,
+        errors: [errorMessage],
+        warnings: [],
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleFileSelect = (file: File) => {
     const fileName = file.name.toLowerCase();
-    const extension = fileName.split('.').pop();
-    
-    // Check if file type is supported
-    const isSupported = acceptedFormats.some(format => fileName.endsWith(format.slice(1)));
-    
+    const isSupported = acceptedFormats.some((format) =>
+      fileName.endsWith(format.slice(1))
+    );
+
     if (!isSupported) {
       toast({
         title: "Unsupported file type",
-        description: `Please upload files in these formats: ${acceptedFormats.join(', ')}`,
+        description: `Please upload files in these formats: ${acceptedFormats.join(
+          ", "
+        )}`,
         variant: "destructive",
       });
       return;
     }
 
     setUploadedFileName(file.name);
-
-    if (file.type === 'text/plain' || fileName.endsWith('.txt')) {
-      // Handle text files directly
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setTextContent(content);
-        parseContent(content);
-      };
-      reader.readAsText(file);
-    } else {
-      // For PDF, Word, Excel and other formats, simulate content extraction
-      const simulatedContent = `2024 GRADE 7 TERM 1 MATHEMATICS SCHEMES OF WORK
-Teacher: John Doe
-School: ABC Primary School
-
-Week	Lesson	Strand	Sub Strand	Specific Learning Outcome	Learning Experiences	Key Inquiry Question	Learning Resources	Assessment	Remarks
-1	1	Measurement	Length	By the end of the sub strand, the learner should be able to work out division involving metres and centimetres in real life situations	Learners in pairs/groups to work out multiplication involving metres and centimetres in real life situations. Learners in pairs/groups to work out division involving metres and centimetres in real life situations. Learners in pairs/groups to play digital games involving length	Why do we measure distance in real life	KLB Visionary Mathematics pg 78	Asking questions Drawing questionnaires	
-2	2	Measurement	Length	By the end of the sub strand, the learner should be able to work out division involving metres and centimetres in real life	Learners in pairs/groups to work out multiplication involving metres and centimetres in real life. Learners in pairs to practice conversions	Why do we measure distance in real life	KLB Visionary Mathematics pg 78	Asking questions Drawing questionnaires	
-
-File: ${file.name}
-Size: ${(file.size / 1024).toFixed(2)} KB`;
-
-      setTextContent(simulatedContent);
-      parseContent(simulatedContent);
-    }
+    parseFile(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -115,41 +310,50 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
     }
   };
 
-  const handleTextSubmit = () => {
-    if (textContent.trim()) {
-      parseContent(textContent);
+  const handleConfirmParsedData = () => {
+    if (parsingResult && parsingResult.success && parsingResult.data) {
+      onUpload(JSON.stringify(parsingResult.data));
+      if (onParsedDataReady) {
+        onParsedDataReady(parsingResult);
+      }
     } else {
       toast({
-        title: "No content provided",
-        description: "Please enter some content or upload a file.",
+        title: "Cannot confirm",
+        description: "No valid parsed data to confirm.",
         variant: "destructive",
       });
     }
   };
 
-  const handleConfirmParsedData = (data: any) => {
-    onUpload(textContent);
-    if (onParsedDataReady && parsingResult) {
-      onParsedDataReady(parsingResult);
-    }
-  };
-
-  const handleEditParsedData = (data: any) => {
-    // For now, just proceed with the raw content
-    // In a future enhancement, we could add an edit form
-    onUpload(textContent);
-    if (onParsedDataReady && parsingResult) {
-      onParsedDataReady(parsingResult);
+  const handleEditParsedData = () => {
+    if (parsingResult && parsingResult.success && parsingResult.data) {
+      onUpload(JSON.stringify(parsingResult.data));
+      if (onParsedDataReady) {
+        onParsedDataReady(parsingResult);
+      }
+    } else {
+      toast({
+        title: "Cannot edit",
+        description: "No valid parsed data to edit.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleReparse = () => {
     if (textContent) {
-      parseContent(textContent);
+      handleTextSubmit();
+    } else if (uploadedFileName && fileInputRef.current?.files?.[0]) {
+      parseFile(fileInputRef.current.files[0]);
+    } else {
+      toast({
+        title: "Nothing to re-parse",
+        description: "No content or file available to re-parse.",
+        variant: "info",
+      });
     }
   };
 
-  // Show parsing results if available
   if (parsingResult) {
     return (
       <SchemeParsingResults
@@ -163,27 +367,29 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
 
   return (
     <div className="space-y-4">
-      {/* Processing indicator */}
       {isProcessing && (
-        <Card className="backdrop-blur-md bg-blue-50/40 border border-blue-200/50">
+        <Card className="backdrop-blur-md bg-secondary-dark/40 border border-secondary-dark/50">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <Zap className="h-5 w-5 text-blue-600 animate-pulse" />
+              <Zap className="h-5 w-5 text-accent-gold animate-pulse" />
               <div>
-                <p className="font-medium text-blue-800">Parsing your scheme of work...</p>
-                <p className="text-sm text-blue-600">Extracting weeks, lessons, strands, and learning outcomes</p>
+                <p className="font-medium text-text-white">
+                  Parsing your scheme of work...
+                </p>
+                <p className="text-sm text-text-gray">
+                  Extracting weeks, lessons, strands, and learning outcomes
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* File Drop Zone */}
       <Card
         className={`border-2 border-dashed transition-colors cursor-pointer backdrop-blur-sm ${
-          dragOver 
-            ? 'border-blue-400 bg-blue-50/30' 
-            : 'border-gray-300/50 hover:border-gray-400/70 bg-white/20'
+          dragOver
+            ? "border-accent-gold bg-secondary-dark/30"
+            : "border-secondary-dark/50 hover:border-secondary-dark/70 bg-secondary-dark/20"
         }`}
         onDrop={handleDrop}
         onDragOver={(e) => {
@@ -194,27 +400,37 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
         onClick={() => fileInputRef.current?.click()}
       >
         <CardContent className="p-8 text-center">
-          <Upload className={`h-12 w-12 mx-auto mb-4 ${dragOver ? 'text-blue-500' : 'text-gray-400'}`} />
-          <p className="text-lg font-medium text-gray-700 mb-2">
+          <Upload
+            className={`h-12 w-12 mx-auto mb-4 ${
+              dragOver ? "text-accent-gold" : "text-text-gray"
+            }`}
+          />
+          <p className="text-lg font-medium text-text-white mb-2">
             Drop your scheme of work file here
           </p>
-          <p className="text-sm text-gray-500 mb-2">
+          <p className="text-sm text-text-gray mb-2">
             Supports PDF, Word, Excel, and text files
           </p>
-          <p className="text-xs text-gray-400 mb-4">
-            {acceptedFormats.join(', ')}
+          <p className="text-xs text-text-gray mb-4">
+            {acceptedFormats.join(", ")}
           </p>
-          
+
           {uploadedFileName && (
-            <div className="mb-4 p-2 bg-green-50/80 backdrop-blur-sm rounded-lg border border-green-200/50">
-              <div className="flex items-center justify-center space-x-2 text-green-700">
+            <div className="mb-4 p-2 bg-secondary-dark/80 backdrop-blur-sm rounded-lg border border-secondary-dark/50">
+              <div className="flex items-center justify-center space-x-2 text-accent-gold">
                 {getFileIcon(uploadedFileName)}
-                <span className="text-sm font-medium">{uploadedFileName}</span>
+                <span className="text-sm font-medium text-text-white">
+                  {uploadedFileName}
+                </span>
               </div>
             </div>
           )}
-          
-          <Button variant="outline" className="mt-2 backdrop-blur-sm bg-white/50 border-white/30">
+
+          <Button
+            variant="outline"
+            className="mt-2 backdrop-blur-sm bg-secondary-dark/50 border-secondary-dark/30 text-text-white"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <FileText className="h-4 w-4 mr-2" />
             Choose File
           </Button>
@@ -224,14 +440,13 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
       <input
         ref={fileInputRef}
         type="file"
-        accept={acceptedFormats.join(',')}
+        accept={acceptedFormats.join(",")}
         onChange={handleFileInputChange}
         className="hidden"
       />
 
-      {/* Text Input Alternative */}
       <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+        <div className="flex items-center space-x-2 text-sm text-text-gray">
           <ClipboardPaste className="h-4 w-4" />
           <span>Or paste your scheme of work content directly:</span>
         </div>
@@ -239,12 +454,12 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
           placeholder="Paste your scheme of work content here..."
           value={textContent}
           onChange={(e) => setTextContent(e.target.value)}
-          className="min-h-32 resize-none backdrop-blur-sm bg-white/30 border-white/30"
+          className="min-h-32 resize-none backdrop-blur-sm bg-secondary-dark/30 border-secondary-dark/30 text-text-white placeholder:text-text-gray"
         />
-        <Button 
+        <Button
           onClick={handleTextSubmit}
           disabled={!textContent.trim() || isProcessing}
-          className="w-full backdrop-blur-sm bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-700/80 hover:to-indigo-700/80 border border-blue-300/30"
+          className="w-full backdrop-blur-sm bg-gradient-to-r from-accent-gold to-accent-gold hover:from-accent-gold/90 hover:to-accent-gold/90 border border-accent-gold/30 text-primary-dark"
         >
           {isProcessing ? (
             <>
@@ -252,7 +467,7 @@ Size: ${(file.size / 1024).toFixed(2)} KB`;
               Parsing Content...
             </>
           ) : (
-            'Parse & Use Content'
+            "Parse & Use Content"
           )}
         </Button>
       </div>

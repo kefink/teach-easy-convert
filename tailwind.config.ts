@@ -19,6 +19,13 @@ export default {
 		},
 		extend: {
 			colors: {
+				'primary-dark': '#1d1e22',
+				'secondary-dark': '#393f4d',
+				'accent-gold': '#feda6a',
+				'text-white': '#ffffff',
+				'text-light-gray': '#e0e0e0',
+				'text-gray': '#8892b0',
+				'input-muted-gray': '#3d4454',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

@@ -46,6 +46,7 @@ export class SchemeParser {
 
   private static readonly LESSON_PATTERNS = [
     /lesson\s*(\d+)/i,
+    /lsn\s*(\d+)/i,
     /period\s*(\d+)/i,
     /^(\d+)$/
   ];
@@ -226,51 +227,63 @@ export class SchemeParser {
   private static parseTableStructure(content: string): SchemeOfWork[] {
     const weeks: SchemeOfWork[] = [];
     const lines = content.split('\n');
-    
-    let currentWeek: Partial<SchemeOfWork> = {};
-    let inDataRow = false;
-    
+    let header: string[] = [];
+    let headerFound = false;
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
-      // Skip header rows
-      if (line.toLowerCase().includes('week') && line.toLowerCase().includes('lesson')) {
-        inDataRow = true;
+      const lowerLine = line.toLowerCase();
+      if (!headerFound && (lowerLine.includes('week') || lowerLine.includes('wk')) && (lowerLine.includes('lesson') || lowerLine.includes('lsn'))) {
+        header = line.split(/\t+|\s+/).map(h => h.toLowerCase().trim());
+        headerFound = true;
         continue;
       }
 
-      if (!inDataRow) continue;
+      if (!headerFound) continue;
 
-      // Try to parse as table row (assuming tab or multiple spaces as separators)
-      const cells = line.split(/\t+|\s{2,}/).filter(cell => cell.trim());
-      
-      if (cells.length >= 6) { // Minimum expected columns
-        const week: SchemeOfWork = {
-          week: this.parseWeekNumber(cells[0]) || 1,
-          lesson: this.parseLessonNumber(cells[1]) || 1,
-          strand: cells[2] || '',
-          subStrand: cells[3] || '',
-          lessonLearningOutcome: this.extractLearningOutcome(cells[4]) || '',
-          learningExperiences: cells[5] || '',
-          keyInquiryQuestion: cells[6] || '',
-          learningResources: cells[7] || '',
-          assessment: cells[8] || '',
-          reflection: cells[9] || undefined
-        };
-        
-        if (week.strand && week.subStrand) {
-          weeks.push(week);
-        }
+      const cells = line.split(/\t+|\s+/).filter(cell => cell.trim());
+      if (cells.length < 2) continue;
+
+      const rowData: { [key: string]: string } = {};
+      for (let j = 0; j < header.length; j++) {
+        rowData[header[j]] = cells[j];
+      }
+
+      const week: SchemeOfWork = {
+        week: this.parseWeekNumber(this.findValue(rowData, ['week', 'wk']) || '') || 1,
+        lesson: this.parseLessonNumber(this.findValue(rowData, ['lesson', 'lsn']) || '') || 1,
+        strand: this.findValue(rowData, ['strand']) || '',
+        subStrand: this.findValue(rowData, ['sub strand', 'sub-strand', 'substrand']) || '',
+        lessonLearningOutcome: this.extractLearningOutcome(this.findValue(rowData, ['learning outcome', 'specific learning outcome', 'slo']) || '') || '',
+        learningExperiences: this.findValue(rowData, ['learning experience', 'learning activities']) || '',
+        keyInquiryQuestion: this.findValue(rowData, ['key inquiry question', 'kiq']) || '',
+        learningResources: this.findValue(rowData, ['learning resource', 'resource', 'lr']) || '',
+        assessment: this.findValue(rowData, ['assessment', 'ass']) || '',
+        reflection: this.findValue(rowData, ['reflection', 'ref']) || '',
+      };
+
+      if (week.strand && week.subStrand) {
+        weeks.push(week);
       }
     }
 
     return weeks;
   }
 
+  private static findValue(rowData: { [key: string]: string }, keys: string[]): string | undefined {
+    for (const key of keys) {
+      if (rowData[key]) {
+        return rowData[key];
+      }
+    }
+    return undefined;
+  }
+
   private static parseTextStructure(content: string): SchemeOfWork[] {
     const weeks: SchemeOfWork[] = [];
-    const sections = content.split(/(?=week\s+\d+)/i);
+    const sections = content.split(/(?=(?:week|wk)\s+\d+)/i);
     
     sections.forEach((section, index) => {
       if (section.trim().length < 20) return; // Skip very short sections

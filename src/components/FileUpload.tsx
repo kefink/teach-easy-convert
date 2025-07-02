@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, FileText, ClipboardPaste, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SchemeParsingResults } from "@/components/SchemeParsingResults";
+import { SchemeUploadGuidance } from "@/components/SchemeUploadGuidance";
 import { ParsingResult } from "@/utils/schemeParser";
 
 // API Configuration
@@ -125,12 +126,52 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           description: `Found ${result.data?.weeks.length} lessons. Please review the extracted information.`,
         });
       } else {
+        // For parsing failures, show helpful guidance
+        const errorMessage =
+          result.errors[0] || "Could not parse the scheme format.";
+        let guidance = "";
+
+        if (
+          errorMessage.includes("structure") ||
+          errorMessage.includes("format")
+        ) {
+          guidance =
+            " Try uploading a different format or check if your scheme follows CBC standards.";
+        } else if (
+          errorMessage.includes("week") ||
+          errorMessage.includes("lesson")
+        ) {
+          guidance =
+            " Make sure your scheme has clear week and lesson indicators.";
+        } else if (
+          errorMessage.includes("server") ||
+          errorMessage.includes("connect")
+        ) {
+          guidance = " Please check your internet connection and try again.";
+        }
+
         toast({
           title: "Parsing encountered issues",
-          description:
-            result.errors[0] || "Please review the errors and try again.",
+          description: errorMessage + guidance,
           variant: "destructive",
         });
+
+        // Still allow user to proceed to manual configuration
+        if (onParsedDataReady) {
+          const fallbackResult: ParsingResult = {
+            success: false,
+            data: {
+              title: "Manual Configuration Required",
+              weeks: [],
+              term: undefined,
+            },
+            errors: [errorMessage],
+            warnings: [
+              "You can still proceed with manual lesson plan configuration.",
+            ],
+          };
+          onParsedDataReady(fallbackResult);
+        }
       }
     } catch (error: any) {
       console.error("File upload and parsing error:", error);
@@ -238,12 +279,47 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           description: `Found ${result.data?.weeks.length} lessons from text.`,
         });
       } else {
+        // For parsing failures, show helpful guidance
+        const errorMessage =
+          result.errors[0] || "Could not parse the text content.";
+        let guidance = "";
+
+        if (
+          errorMessage.includes("structure") ||
+          errorMessage.includes("format")
+        ) {
+          guidance =
+            " Try formatting your text with clear sections for each week/lesson.";
+        } else if (
+          errorMessage.includes("week") ||
+          errorMessage.includes("lesson")
+        ) {
+          guidance =
+            " Make sure your text includes week numbers and lesson details.";
+        }
+
         toast({
           title: "Parsing encountered issues",
-          description:
-            result.errors[0] || "Please review the errors and try again.",
+          description: errorMessage + guidance,
           variant: "destructive",
         });
+
+        // Still allow user to proceed to manual configuration
+        if (onParsedDataReady) {
+          const fallbackResult: ParsingResult = {
+            success: false,
+            data: {
+              title: "Manual Configuration Required",
+              weeks: [],
+              term: undefined,
+            },
+            errors: [errorMessage],
+            warnings: [
+              "You can still proceed with manual lesson plan configuration.",
+            ],
+          };
+          onParsedDataReady(fallbackResult);
+        }
       }
     } catch (error: any) {
       console.error("Text parsing error:", error);
@@ -312,7 +388,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleConfirmParsedData = () => {
     if (parsingResult && parsingResult.success && parsingResult.data) {
-      onUpload(JSON.stringify(parsingResult.data));
+      // Only call onParsedDataReady, not onUpload to avoid double processing
       if (onParsedDataReady) {
         onParsedDataReady(parsingResult);
       }
@@ -327,7 +403,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleEditParsedData = () => {
     if (parsingResult && parsingResult.success && parsingResult.data) {
-      onUpload(JSON.stringify(parsingResult.data));
+      // Only call onParsedDataReady, not onUpload to avoid double processing
       if (onParsedDataReady) {
         onParsedDataReady(parsingResult);
       }
@@ -471,6 +547,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           )}
         </Button>
       </div>
+
+      <SchemeUploadGuidance />
     </div>
   );
 };

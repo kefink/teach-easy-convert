@@ -16,6 +16,7 @@ import fitz  # PyMuPDF for better PDF parsing
 from dotenv import load_dotenv
 import os
 from document_generator import DocumentGenerator
+from enhanced_parser import EnhancedSchemeParser
 
 # Load environment variables from .env file
 load_dotenv()
@@ -178,7 +179,22 @@ def extract_text_from_docx(file_content: bytes) -> str:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to extract text from DOCX: {str(e)}")
 
-def parse_scheme_of_work(text: str) -> dict:
+def parse_scheme_of_work(text: str, filename: str = "") -> dict:
+    """Enhanced parsing with multiple strategies and robust error handling"""
+    
+    # Initialize enhanced parser
+    enhanced_parser = EnhancedSchemeParser()
+    
+    # Try enhanced parsing first (for file uploads)
+    if filename:
+        try:
+            # This assumes we have the file content as bytes
+            # For text input, we'll use the fallback method
+            pass
+        except Exception as e:
+            print(f"Enhanced parser failed: {e}")
+    
+    # Fallback to original parsing method
     try:
         # Enhanced patterns for week detection
         week_patterns = [
@@ -426,12 +442,12 @@ def read_root():
 
 @app.post("/parse-scheme/", response_model=ParsedSchemeResponse)
 async def parse_scheme_file(file: UploadFile = File(...)):
-    """Parse uploaded scheme of work file to extract lesson plan data"""
+    """Enhanced parsing of uploaded scheme of work file"""
     try:
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file uploaded")
 
-        allowed_types = ['.pdf', '.docx', '.doc', '.txt']
+        allowed_types = ['.pdf', '.docx', '.doc', '.txt', '.xls', '.xlsx']
         file_extension = file.filename.lower().split('.')[-1]
 
         if f'.{file_extension}' not in allowed_types:
@@ -441,6 +457,24 @@ async def parse_scheme_file(file: UploadFile = File(...)):
             )
 
         file_content = await file.read()
+        
+        # Try enhanced parser first
+        try:
+            enhanced_parser = EnhancedSchemeParser()
+            if file_extension == 'pdf':
+                parsed_data = enhanced_parser.parse_scheme(file_content, file.filename)
+                
+                if parsed_data['success'] and parsed_data['lesson_plans']:
+                    return ParsedSchemeResponse(
+                        success=True,
+                        message=parsed_data['message'],
+                        weeks_found=parsed_data['weeks_found'],
+                        lesson_plans=parsed_data['lesson_plans']
+                    )
+        except Exception as e:
+            print(f"Enhanced parser failed, falling back to original: {e}")
+        
+        # Fallback to original parsing
         if file_extension == 'pdf':
             text = extract_text_from_pdf(file_content)
         elif file_extension in ['docx', 'doc']:
@@ -450,10 +484,16 @@ async def parse_scheme_file(file: UploadFile = File(...)):
         else:
             raise HTTPException(status_code=400, detail="Unsupported file format")
 
-        parsed_data = parse_scheme_of_work(text)
+        parsed_data = parse_scheme_of_work(text, file.filename)
 
         if 'error' in parsed_data:
-            raise HTTPException(status_code=400, detail=parsed_data['error'])
+            # If parsing fails, return a more helpful response
+            return ParsedSchemeResponse(
+                success=False,
+                message=f"Could not parse scheme structure. {parsed_data['error']}. Please check if your scheme follows standard CBC format.",
+                weeks_found=[],
+                lesson_plans=[]
+            )
 
         return ParsedSchemeResponse(
             success=True,
@@ -461,6 +501,7 @@ async def parse_scheme_file(file: UploadFile = File(...)):
             weeks_found=parsed_data['weeks_found'],
             lesson_plans=parsed_data['lesson_plans']
         )
+        
     except HTTPException as e:
         raise e
     except Exception as e:

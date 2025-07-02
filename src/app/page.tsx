@@ -3,14 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { LessonPlanConfig, LessonPlanConfiguration } from '@/components/LessonPlanConfig';
-import { ConversionResults } from '@/components/ConversionResults';
+import { LessonPlanEditor } from '@/components/LessonPlanEditor';
 import { SampleData } from '@/components/SampleData';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { BookOpen, Zap, Users, CheckCircle, Moon, Sun } from 'lucide-react';
 import { useTheme } from "next-themes";
 import { LessonPlan, getCoreCompetencies } from '@/types/LessonPlan';
 import { ParsedSchemeData, ParsingResult } from '@/utils/schemeParser';
+import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const [uploadedContent, setUploadedContent] = useState<string>('');
@@ -21,17 +22,16 @@ const Index = () => {
   const [configuration, setConfiguration] = useState<LessonPlanConfiguration | null>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [parsingError, setParsingError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const [parsingError, setParsingError] = useState<string | null>(null);
-
   const handleUpload = (content: string) => {
     setUploadedContent(content);
     setShowConfig(true);
-    setParsingError(null); // Reset error on new upload
+    setParsingError(null);
   };
 
   const handleParsedDataReady = (result: ParsingResult) => {
@@ -54,11 +54,9 @@ const Index = () => {
   const convertToLessonPlans = (content: string, config: LessonPlanConfiguration, parsed?: ParsedSchemeData | null) => {
     setIsLoading(true);
     
-    // Simulate API call delay
     setTimeout(() => {
       const mockLessonPlans: LessonPlan[] = [];
       
-      // If we have parsed data, use it to generate more accurate lesson plans
       if (parsed && parsed.weeks.length > 0) {
         parsed.weeks.forEach((week, index) => {
           const coreCompetencies = getCoreCompetencies(config.learningArea);
@@ -80,7 +78,7 @@ const Index = () => {
             specificLearningOutcomes: [
               `By the end of the lesson, the learner should be able to ${week.lessonLearningOutcome.toLowerCase()}`
             ],
-            coreCompetencies: coreCompetencies.slice(0, 3), // Use first 3 relevant competencies
+            coreCompetencies: coreCompetencies.slice(0, 3),
             keyInquiryQuestion: week.keyInquiryQuestion || `How can we apply knowledge of ${week.subStrand} in real life situations?`,
             learningResources: week.learningResources ? week.learningResources.split(',').map(r => r.trim()) : [
               'Textbooks and reference materials',
@@ -139,7 +137,6 @@ const Index = () => {
           mockLessonPlans.push(lessonPlan);
         });
       } else {
-        // Fall back to enhanced mock data generation
         const coreCompetencies = getCoreCompetencies(config.learningArea);
         
         const sampleLessonPlan: LessonPlan = {
@@ -236,9 +233,36 @@ const Index = () => {
     setParsingError(null);
   };
 
+  const handleExport = async (lessonPlan: LessonPlan, format: string) => {
+    try {
+      const response = await fetch(`/api/export/${format}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lessonPlan),
+      });
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lesson_plan.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: 'Export Failed',
+        description: 'Could not generate the document.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="bg-secondary-dark/80 backdrop-blur-sm border-b border-secondary-dark/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -277,7 +301,6 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {!uploadedContent && !showConfig && (
           <>
-            {/* Hero Section */}
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-accent-gold to-accent-gold bg-clip-text text-transparent">
                 AI-Powered CBC Lesson Plan Generation
@@ -288,7 +311,6 @@ const Index = () => {
               </p>
             </div>
 
-            {/* Features */}
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               {[
                 {
@@ -321,7 +343,6 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Upload Section */}
             <Card className="backdrop-blur-md bg-secondary-dark/40 border border-secondary-dark/30 shadow-xl mb-8">
               <CardHeader>
                 <CardTitle className="text-center bg-gradient-to-r from-text-white to-text-white bg-clip-text text-transparent">
@@ -339,12 +360,10 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Sample Data Section */}
             <SampleData />
           </>
         )}
 
-        {/* Configuration Step */}
         {showConfig && (
           <LessonPlanConfig 
             onConfigurationComplete={handleConfigurationComplete}
@@ -352,12 +371,17 @@ const Index = () => {
           />
         )}
 
-        {/* Results */}
         {lessonPlans.length > 0 && (
-          <ConversionResults 
-            lessons={lessonPlans} 
-            isLoading={isLoading}
-          />
+          <div className="space-y-8">
+            {lessonPlans.map((lessonPlan) => (
+              <LessonPlanEditor
+                key={lessonPlan.id}
+                lessonPlan={lessonPlan}
+                onExport={(format) => handleExport(lessonPlan, format)}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Text, Date
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,6 +15,7 @@ from docx import Document
 import fitz  # PyMuPDF for better PDF parsing
 from dotenv import load_dotenv
 import os
+from document_generator import DocumentGenerator
 
 # Load environment variables from .env file
 load_dotenv()
@@ -482,6 +484,24 @@ async def parse_text_input(text_input: TextInput):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse text: {str(e)}")
+
+@app.post("/api/export/word")
+async def export_to_word(lesson_plan: dict):
+    buffer = DocumentGenerator.generate_word_doc(lesson_plan)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": "attachment; filename=lesson_plan.docx"}
+    )
+
+@app.post("/api/export/pdf")
+async def export_to_pdf(lesson_plan: dict):
+    buffer = DocumentGenerator.generate_pdf(lesson_plan)
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=lesson_plan.pdf"}
+    )
 
 @app.post("/debug-parse-scheme/")
 async def debug_parse_scheme_file(file: UploadFile = File(...)):
